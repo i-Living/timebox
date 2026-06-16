@@ -9,6 +9,9 @@ export default defineConfig({
     preact(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        navigateFallbackDenylist: [/\.(png|svg|ico|txt|html)$/],
+      },
       manifest: {
         name: 'TimeBox',
         short_name: 'TimeBox',
