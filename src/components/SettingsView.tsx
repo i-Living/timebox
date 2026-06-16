@@ -13,11 +13,8 @@ const DURATION_PRESETS = [30, 45, 60, 90, 120];
 const GCAL_CLIENT_ID_KEY = 'timebox_gcal_client_id';
 
 function getSavedClientId(): string {
-  return localStorage.getItem(GCAL_CLIENT_ID_KEY) || (import.meta as any)?.env?.VITE_GOOGLE_CLIENT_ID || '';
-}
-
-function saveClientId(id: string): void {
-  localStorage.setItem(GCAL_CLIENT_ID_KEY, id);
+  const envId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+  return localStorage.getItem(GCAL_CLIENT_ID_KEY) || envId;
 }
 
 export function SettingsView({ data, onChange }: Props) {
@@ -34,7 +31,6 @@ export function SettingsView({ data, onChange }: Props) {
   // Google Calendar state
   const [gcalConnected, setGcalConnected] = useState(false);
   const [gcalEmail, setGcalEmail] = useState('');
-  const [gcalClientId, setGcalClientId] = useState(getSavedClientId);
   const [gcalLoading, setGcalLoading] = useState(false);
   const [gcalError, setGcalError] = useState('');
 
@@ -47,17 +43,17 @@ export function SettingsView({ data, onChange }: Props) {
   }, []);
 
   const handleConnect = async () => {
-    if (!gcalClientId.trim()) {
-      setGcalError('Введите Client ID');
+    const clientId = getSavedClientId();
+    if (!clientId) {
+      setGcalError('Client ID не настроен');
       return;
     }
     setGcalLoading(true);
     setGcalError('');
     try {
-      const token = await connectGoogleCalendar(gcalClientId.trim());
+      const token = await connectGoogleCalendar(clientId);
       setGcalConnected(true);
       if (token.email) setGcalEmail(token.email);
-      saveClientId(gcalClientId.trim());
     } catch (e: any) {
       setGcalError(e.message || 'Ошибка подключения');
     } finally {
@@ -170,20 +166,8 @@ export function SettingsView({ data, onChange }: Props) {
 
         {!gcalConnected && (
           <>
-            <div class="form-group">
-              <label class="form-label">Google OAuth Client ID</label>
-              <input
-                class="form-input"
-                type="text"
-                value={gcalClientId}
-                onInput={e => setGcalClientId(e.currentTarget.value)}
-                placeholder={getSavedClientId() || 'XXXXXXXXXXXX.apps.googleusercontent.com'}
-              />
-            </div>
-            <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">
-              <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">
-                Создать Client ID в Google Cloud Console ↗
-              </a>
+            <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">
+              При подтверждении брони событие будет автоматически создано в вашем Google Календаре
             </div>
             {gcalError && (
               <div style="font-size:13px;color:var(--danger);margin-bottom:8px;">{gcalError}</div>
@@ -201,7 +185,7 @@ export function SettingsView({ data, onChange }: Props) {
               <span style="font-size:14px;">{gcalEmail || 'Подключен'}</span>
             </div>
             <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">
-              При подтверждении брони событие будет создано в вашем Google Календаре
+              События создаются автоматически при подтверждении брони
             </div>
             <button class="btn btn-outline btn-block btn-sm" onClick={handleDisconnect}>
               Отключить
