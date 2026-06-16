@@ -10,7 +10,7 @@ function fmtDate(d: string, t: string): string {
   return d.replace(/-/g, '') + 'T' + t.replace(/:/g, '') + '00';
 }
 
-export function generateSlotICS(slot: Slot, trainerName: string): string {
+export function generateSlotICS(slot: Slot, organizerName: string): string {
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
@@ -18,7 +18,7 @@ export function generateSlotICS(slot: Slot, trainerName: string): string {
     'BEGIN:VEVENT',
     'DTSTART:' + fmtDate(slot.date, slot.start),
     'DTEND:' + fmtDate(slot.date, slot.end),
-    'SUMMARY:' + esc(trainerName || 'TimeBox'),
+    'SUMMARY:' + esc(organizerName || 'TimeBox'),
   ];
 
   const confirmed = slot.bookings.filter(b => b.status === 'confirmed');
@@ -38,7 +38,7 @@ export function generateSlotICS(slot: Slot, trainerName: string): string {
   return lines.join('\\r\\n');
 }
 
-export function generateSlotsICS(slots: Slot[], trainerName: string): string {
+export function generateSlotsICS(slots: Slot[], organizerName: string): string {
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
@@ -53,10 +53,10 @@ export function generateSlotsICS(slots: Slot[], trainerName: string): string {
     const confirmed = slot.bookings.filter(b => b.status === 'confirmed');
     if (confirmed.length > 0) {
       const names = confirmed.map(b => b.name).join(', ');
-      lines.push('SUMMARY:' + esc(trainerName || 'TimeBox') + ': ' + names);
-      lines.push('DESCRIPTION:Ученики: ' + esc(names));
+      lines.push('SUMMARY:' + esc(organizerName || 'TimeBox') + ': ' + names);
+      lines.push('DESCRIPTION:Клиенти: ' + esc(names));
     } else {
-      lines.push('SUMMARY:' + esc(trainerName || 'Свободное окно'));
+      lines.push('SUMMARY:' + esc(organizerName || 'Свободное окно'));
       lines.push('TRANSP:TRANSPARENT');
     }
 

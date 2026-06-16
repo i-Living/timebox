@@ -38,10 +38,10 @@ export function decodeBookPayload(hash: string): BookPayload | null {
   }
 }
 
-export function buildSharePayload(trainer: string, slots: Slot[]): SharePayload {
+export function buildSharePayload(organizer: string, slots: Slot[]): SharePayload {
   return {
     v: 1,
-    trainer,
+    organizer,
     slots: slots.map(s => ({
       id: s.id,
       date: s.date,

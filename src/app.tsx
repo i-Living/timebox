@@ -1,16 +1,16 @@
 
 import { useState, useEffect } from 'preact/hooks';
-import { TrainerView } from './components/TrainerView';
-import { StudentView } from './components/StudentView';
+import { OrganizerView } from './components/OrganizerView';
+import { ClientView } from './components/ClientView';
 import { ConfirmView } from './components/ConfirmView';
 import { decodeSharePayload, decodeBookPayload } from './utils/url';
 import { load, save, confirmBooking } from './store';
 import type { Slot } from './types';
 
-type Mode = 'trainer' | 'student' | 'confirm' | 'error';
+type Mode = 'organizer' | 'client' | 'confirm' | 'error';
 
 export function App() {
-  const [mode, setMode] = useState<Mode>('trainer');
+  const [mode, setMode] = useState<Mode>('organizer');
   const [sharePayload, setSharePayload] = useState<any>(null);
   const [bookPayload, setBookPayload] = useState<any>(null);
   const [targetSlot, setTargetSlot] = useState<Slot | undefined>();
@@ -24,7 +24,7 @@ export function App() {
       const decoded = decodeSharePayload(hash);
       if (decoded) {
         setSharePayload(decoded);
-        setMode('student');
+        setMode('client');
         return;
       }
     }
@@ -34,7 +34,7 @@ export function App() {
       const decoded = decodeBookPayload(hash);
       if (decoded) {
         setBookPayload(decoded);
-        // Find the slot in trainer data
+        // Find the slot in organizer data
         const data = load();
         const slot = data.slots.find(s => s.id === decoded.slotId);
         setTargetSlot(slot);
@@ -50,8 +50,8 @@ export function App() {
       }
     }
 
-    // Default: trainer mode
-    setMode('trainer');
+    // Default: organizer mode
+    setMode('organizer');
   };
 
   useEffect(() => {
@@ -79,9 +79,9 @@ export function App() {
       const finalSlots = confirmBooking(slots, targetSlot.id, bookingIdx);
       save({ ...data, slots: finalSlots });
     }
-    // Clear hash and go to trainer
+    // Clear hash and go to organizer
     window.location.hash = '';
-    setMode('trainer');
+    setMode('organizer');
   };
 
   const handleDecline = () => {
@@ -98,11 +98,11 @@ export function App() {
     );
     save({ ...data, slots });
     window.location.hash = '';
-    setMode('trainer');
+    setMode('organizer');
   };
 
-  if (mode === 'student' && sharePayload) {
-    return <StudentView payload={sharePayload} />;
+  if (mode === 'client' && sharePayload) {
+    return <ClientView payload={sharePayload} />;
   }
 
   if (mode === 'confirm' && bookPayload) {
@@ -117,5 +117,5 @@ export function App() {
     );
   }
 
-  return <TrainerView />;
+  return <OrganizerView />;
 }

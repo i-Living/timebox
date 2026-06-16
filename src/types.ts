@@ -31,9 +31,9 @@ export interface SlotPublic {
   bookedCount: number;
 }
 
-export interface TrainerData {
+export interface OrganizerData {
   version: 1;
-  trainerName: string;
+  organizerName: string;
   timezone: string;
   slots: Slot[];
   defaultSlotDuration: number;
@@ -44,7 +44,7 @@ export interface TrainerData {
 
 export interface SharePayload {
   v: 1;
-  trainer: string;
+  organizer: string;
   slots: SlotPublic[];
   at: string;
 }

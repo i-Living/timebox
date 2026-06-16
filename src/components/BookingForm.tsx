@@ -15,7 +15,7 @@ export function BookingForm({ slot, onBook, onBack }: Props) {
   const remaining = slot.capacity - slot.bookedCount;
 
   return (
-    <div class="student-form">
+    <div class="client-form">
       <div style="font-size:14px;color:var(--text-secondary);text-align:center;">
         {remaining > 1 ? `Доступно ${remaining} мест из ${slot.capacity}` : 'Индивидуальное занятие'}
       </div>

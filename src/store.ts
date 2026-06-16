@@ -1,11 +1,11 @@
 
-import type { Slot, TrainerData, Booking } from './types';
+import type { Slot, OrganizerData, Booking } from './types';
 
 const KEY = 'timebox_data';
 
-const defaults: TrainerData = {
+const defaults: OrganizerData = {
   version: 1,
-  trainerName: '',
+  organizerName: '',
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   slots: [],
   defaultSlotDuration: 60,
@@ -14,7 +14,7 @@ const defaults: TrainerData = {
   workingDays: [1, 2, 3, 4, 5],
 };
 
-export function load(): TrainerData {
+export function load(): OrganizerData {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return { ...defaults };
@@ -24,7 +24,7 @@ export function load(): TrainerData {
   }
 }
 
-export function save(d: TrainerData): void {
+export function save(d: OrganizerData): void {
   localStorage.setItem(KEY, JSON.stringify(d));
 }
 

@@ -315,15 +315,15 @@ body {
 .nav-item.active { color: var(--primary); }
 .nav-item .nav-icon { font-size: 22px; }
 
-/* --- STUDENT VIEW --- */
-.student-header {
+/* --- CLIENT VIEW --- */
+.client-header {
   background: var(--primary);
   color: white;
   padding: 20px 16px;
   text-align: center;
 }
-.student-header h1 { font-size: 20px; margin-bottom: 4px; }
-.student-header p { font-size: 14px; opacity: 0.8; }
+.client-header h1 { font-size: 20px; margin-bottom: 4px; }
+.client-header p { font-size: 14px; opacity: 0.8; }
 
 /* --- SHARE DIALOG --- */
 .share-link-box {
@@ -411,7 +411,7 @@ body {
 @keyframes toast-in { from { opacity: 0; transform: translateX(-50%) translateY(10px); } }
 
 /* Booking form student */
-.student-form {
+.client-form {
   padding: 20px 16px;
   display: flex;
   flex-direction: column;

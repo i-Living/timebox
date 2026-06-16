@@ -11,7 +11,7 @@ interface Props {
   payload: SharePayload;
 }
 
-export function StudentView({ payload }: Props) {
+export function ClientView({ payload }: Props) {
   const [selectedSlot, setSelectedSlot] = useState<SharePayload['slots'][0] | null>(null);
   const [bookedPayload, setBookedPayload] = useState<BookPayload | null>(null);
   const [copied, setCopied] = useState(false);
@@ -66,7 +66,7 @@ export function StudentView({ payload }: Props) {
       ics.push('BEGIN:VEVENT');
       ics.push('DTSTART:' + s.date.replace(/-/g, '') + 'T' + s.start.replace(/:/g, '') + '00');
       ics.push('DTEND:' + s.date.replace(/-/g, '') + 'T' + s.end.replace(/:/g, '') + '00');
-      ics.push('SUMMARY:' + (payload.trainer || 'Свободное окно'));
+      ics.push('SUMMARY:' + (payload.organizer || 'Свободное окно'));
       ics.push('TRANSP:TRANSPARENT');
       ics.push('STATUS:CONFIRMED');
       ics.push('END:VEVENT');
@@ -79,8 +79,8 @@ export function StudentView({ payload }: Props) {
   if (selectedSlot && !bookedPayload) {
     return (
       <div>
-        <div class="student-header">
-          <h1>{payload.trainer || 'Организатор'}</h1>
+        <div class="client-header">
+          <h1>{payload.organizer || 'Организатор'}</h1>
           <p>{formatDateFull(selectedSlot.date)} {selectedSlot.start}–{selectedSlot.end}</p>
         </div>
         <BookingForm
@@ -96,11 +96,11 @@ export function StudentView({ payload }: Props) {
   if (bookedPayload) {
     return (
       <div>
-        <div class="student-header">
+        <div class="client-header">
           <h1>✅ Забронировано!</h1>
           <p>{formatDateFull(selectedSlot!.date)} {selectedSlot!.start}–{selectedSlot!.end}</p>
         </div>
-        <div class="student-form">
+        <div class="client-form">
           <p style="text-align:center;color:var(--text-secondary);">
             Отправьте эту ссылку организатору для подтверждения:
           </p>
@@ -124,8 +124,8 @@ export function StudentView({ payload }: Props) {
   // Main list
   return (
     <div>
-      <div class="student-header">
-        <h1>{payload.trainer || 'Организатор'}</h1>
+      <div class="client-header">
+        <h1>{payload.organizer || 'Организатор'}</h1>
         <p>Свободные окна</p>
       </div>
 

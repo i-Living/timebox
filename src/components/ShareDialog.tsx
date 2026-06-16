@@ -6,12 +6,12 @@ import { today, addDays, formatDateFull } from '../utils/dates';
 import { encodeSharePayload, buildSharePayload } from '../utils/url';
 
 interface Props {
-  trainerName: string;
+  organizerName: string;
   slots: Slot[];
   onClose: () => void;
 }
 
-export function ShareDialog({ trainerName, slots, onClose }: Props) {
+export function ShareDialog({ organizerName, slots, onClose }: Props) {
   const [fromDate, setFromDate] = useState(today());
   const [toDate, setToDate] = useState(addDays(today(), 7));
   const [link, setLink] = useState('');
@@ -20,7 +20,7 @@ export function ShareDialog({ trainerName, slots, onClose }: Props) {
   const freeSlots = getFreeSlots(slots, fromDate, toDate);
 
   const generateLink = () => {
-    const payload = buildSharePayload(trainerName, freeSlots);
+    const payload = buildSharePayload(organizerName, freeSlots);
     const fullUrl = window.location.origin + window.location.pathname + encodeSharePayload(payload);
     setLink(fullUrl);
   };

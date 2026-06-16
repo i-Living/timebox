@@ -10,7 +10,7 @@ import { ShareDialog } from './ShareDialog';
 import { DiaryView } from './DiaryView';
 import { BottomNav } from './BottomNav';
 
-export function TrainerView() {
+export function OrganizerView() {
   const [data, setData] = useState(() => load());
   const [selectedDate, setSelectedDate] = useState(today());
   const [weekStart, setWeekStart] = useState(() => getWeekStart(today()));
@@ -124,7 +124,7 @@ export function TrainerView() {
 
       {showShare && (
         <ShareDialog
-          trainerName={data.trainerName}
+          organizerName={data.organizerName}
           slots={data.slots}
           onClose={() => setShowShare(false)}
         />
