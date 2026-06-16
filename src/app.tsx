@@ -5,6 +5,7 @@ import { ClientView } from './components/ClientView';
 import { ConfirmView } from './components/ConfirmView';
 import { decodeSharePayload, decodeBookPayload } from './utils/url';
 import { load, save, confirmBooking } from './store';
+import { getStoredToken, createCalendarEvent, slotToEvent } from './utils/gcal';
 import type { Slot } from './types';
 
 type Mode = 'organizer' | 'client' | 'confirm' | 'error';
@@ -61,6 +62,33 @@ export function App() {
     return () => window.removeEventListener('hashchange', handler);
   }, []);
 
+  const tryCreateGcalEvent = async (slot: Slot) => {
+    const token = getStoredToken();
+    if (!token) return; // Not connected
+
+    const clientId = localStorage.getItem('timebox_gcal_client_id') || '';
+    if (!clientId) return;
+
+    const data = load();
+    const confirmedNames = slot.bookings
+      .filter(b => b.status === 'confirmed')
+      .map(b => b.name);
+
+    try {
+      const event = slotToEvent(
+        slot,
+        data.organizerName,
+        confirmedNames,
+        slot.notes,
+        data.timezone,
+      );
+      await createCalendarEvent(clientId, event);
+    } catch (e) {
+      // Silently fail — the booking is already saved locally
+      console.error('GCal event creation failed:', e);
+    }
+  };
+
   const handleConfirm = () => {
     if (!bookPayload || !targetSlot) return;
     const data = load();
@@ -78,6 +106,9 @@ export function App() {
       // Confirm the booking
       const finalSlots = confirmBooking(slots, targetSlot.id, bookingIdx);
       save({ ...data, slots: finalSlots });
+
+      // Create Google Calendar event if connected
+      tryCreateGcalEvent(targetSlot);
     }
     // Clear hash and go to organizer
     window.location.hash = '';
