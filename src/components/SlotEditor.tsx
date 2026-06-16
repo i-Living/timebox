@@ -5,9 +5,18 @@ import { today } from '../utils/dates';
 
 interface Props {
   slot?: Slot; // undefined = creating new
+  defaultDuration?: number;
   onSave: (slot: Slot) => void;
   onDelete?: (id: string) => void;
   onClose: () => void;
+}
+
+function addMinutes(time: string, minutes: number): string {
+  const [h, m] = time.split(':').map(Number);
+  const total = h * 60 + m + minutes;
+  const nh = Math.floor(total / 60) % 24;
+  const nm = total % 60;
+  return `${String(nh).padStart(2, '0')}:${String(nm).padStart(2, '0')}`;
 }
 
 let idCounter = Date.now();
@@ -15,10 +24,11 @@ function genId(): string {
   return 's' + (++idCounter).toString(36);
 }
 
-export function SlotEditor({ slot, onSave, onDelete, onClose }: Props) {
+export function SlotEditor({ slot, defaultDuration, onSave, onDelete, onClose }: Props) {
   const [date, setDate] = useState(slot?.date || today());
   const [start, setStart] = useState(slot?.start || '09:00');
-  const [end, setEnd] = useState(slot?.end || '10:00');
+  const defaultEnd = defaultDuration ? addMinutes(start, defaultDuration) : '10:00';
+  const [end, setEnd] = useState(slot?.end || defaultEnd);
   const [capacity, setCapacity] = useState(slot?.capacity || 1);
   const [repeat, setRepeat] = useState(slot?.repeat !== undefined);
   const [repeatFreq, setRepeatFreq] = useState<'daily' | 'weekly' | 'biweekly'>(slot?.repeat?.freq || 'weekly');

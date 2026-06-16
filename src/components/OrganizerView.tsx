@@ -9,6 +9,7 @@ import { SlotEditor } from './SlotEditor';
 import { ShareDialog } from './ShareDialog';
 import { DiaryView } from './DiaryView';
 import { BottomNav } from './BottomNav';
+import { SettingsView } from './SettingsView';
 
 export function OrganizerView() {
   const [data, setData] = useState(() => load());
@@ -17,7 +18,7 @@ export function OrganizerView() {
   const [showEditor, setShowEditor] = useState(false);
   const [editingSlot, setEditingSlot] = useState<Slot | undefined>();
   const [showShare, setShowShare] = useState(false);
-  const [tab, setTab] = useState<'calendar' | 'diary'>('calendar');
+  const [tab, setTab] = useState<'calendar' | 'diary' | 'settings'>('calendar');
   const [toast, setToast] = useState('');
 
   // Save data on every change
@@ -110,12 +111,15 @@ export function OrganizerView() {
 
       {tab === 'diary' && <DiaryView slots={data.slots} />}
 
+      {tab === 'settings' && <SettingsView data={data} onChange={setData} />}
+
       <BottomNav active={tab} onSelect={setTab} />
 
       {/* MODALS */}
       {showEditor && (
         <SlotEditor
           slot={editingSlot}
+          defaultDuration={data.defaultSlotDuration}
           onSave={handleSaveSlot}
           onDelete={handleDeleteSlot}
           onClose={() => { setShowEditor(false); setEditingSlot(undefined); }}
