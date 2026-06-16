@@ -114,7 +114,7 @@ export function SlotEditor({ slot, defaultDuration, onSave, onDelete, onClose }:
         <div class="form-group">
           <label class="form-label">Заметки (дневник)</label>
           <textarea class="form-input" rows={3} value={notes} onInput={e => setNotes(e.currentTarget.value)}
-            placeholder="Что планируется на занятии..." />
+            placeholder="Что планируется в это время" />
         </div>
 
         <div style="display:flex;gap:8px;">

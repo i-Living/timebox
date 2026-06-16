@@ -28,6 +28,40 @@ export function SettingsView({ data, onChange }: Props) {
     update({ workingDays: days });
   };
 
+  // FAQ accordion
+  const [openFaq, setOpenFaq] = useState(-1);
+
+  const faqItems = [
+    {
+      q: 'Что такое TimeBox?',
+      a: 'TimeBox — это мобильное приложение для записи на свободные временные слоты. Организатор создаёт слоты и делится ссылкой, клиенты бронируют время без регистрации.',
+    },
+    {
+      q: 'Как поделиться свободным временем?',
+      a: 'Создайте слоты в разделе «Календарь», нажмите «Поделиться» и отправьте сгенерированную ссылку клиентам. В ссылке зашиты все свободные слоты — сервер не нужен.',
+    },
+    {
+      q: 'Как клиент бронирует время?',
+      a: 'Клиент переходит по ссылке, видит список доступных слотов, выбирает подходящий, вводит имя и нажимает «Забронировать». Организатор получит уведомление.',
+    },
+    {
+      q: 'Что происходит после бронирования?',
+      a: 'Организатор видит запрос в разделе «Записи» и может подтвердить или отклонить. При подтверждении слот помечается занятым, а если подключен Google Календарь — создаётся событие.',
+    },
+    {
+      q: 'Где хранятся мои данные?',
+      a: 'Все слоты, записи и настройки хранятся только в вашем браузере (localStorage). Никакие данные не отправляются на сервер. Вы полностью контролируете свою информацию.',
+    },
+    {
+      q: 'Работает ли без интернета?',
+      a: 'Да, TimeBox можно установить как PWA (на главный экран телефона) и пользоваться офлайн. Все данные локальны, интернет нужен только для синхронизации с Google Календарём.',
+    },
+    {
+      q: 'Как подключить Google Календарь?',
+      a: 'В настройках нажмите «Подключить Google Календарь» и разрешите доступ. После этого подтверждённые брони будут автоматически создавать события в вашем календаре. Это безопасно: приложение не хранит ваш пароль.',
+    },
+  ];
+
   // Google Calendar state
   const [gcalConnected, setGcalConnected] = useState(false);
   const [gcalEmail, setGcalEmail] = useState('');
@@ -112,7 +146,7 @@ export function SettingsView({ data, onChange }: Props) {
       {/* Working days */}
       <div class="settings-section">
         <h3>Рабочие дни</h3>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <div style="display:flex;gap:2px;flex-wrap:wrap;">
           {DAY_LABELS.map((label, i) => {
             const active = data.workingDays.includes(i);
             return (
@@ -120,7 +154,7 @@ export function SettingsView({ data, onChange }: Props) {
                 key={i}
                 class={`btn btn-sm ${active ? 'btn-primary' : 'btn-outline'}`}
                 onClick={() => toggleDay(i)}
-                style="min-width:44px;"
+                style="min-width:0;padding:6px 8px;"
               >
                 {label}
               </button>
@@ -158,6 +192,27 @@ export function SettingsView({ data, onChange }: Props) {
             />
           </div>
         </div>
+      </div>
+
+      {/* FAQ */}
+      <div class="settings-section">
+        <h3>Часто задаваемые вопросы</h3>
+        {faqItems.map((item, i) => (
+          <div key={i} style="border-bottom:1px solid var(--border);padding:0;">
+            <button
+              class="btn btn-outline btn-block btn-sm"
+              style="text-align:left;font-weight:500;border:none;border-radius:0;padding:10px 0;"
+              onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
+            >
+              {openFaq === i ? '▾' : '▸'} {item.q}
+            </button>
+            {openFaq === i && (
+              <div style="font-size:13px;color:var(--text-secondary);padding:0 0 10px 20px;line-height:1.5;">
+                {item.a}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
 
       {/* Google Calendar */}

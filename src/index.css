@@ -256,8 +256,8 @@ body {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--primary-light);
 }
-.form-row { display: flex; gap: 8px; }
-.form-row > * { flex: 1; }
+.form-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.form-row > * { flex: 1; min-width: 140px; }
 
 .btn {
   padding: 12px 20px;
