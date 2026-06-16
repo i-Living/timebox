@@ -9,49 +9,9 @@
     <meta name="description" content="TimeBox — делись свободным временным окном" />
     <link rel="manifest" href="/manifest.json" />
     <title>TimeBox</title>
-    <style>
-      /* Static info section — visible to Google verifier, hidden when PWA mounts */
-      .app-info {
-        max-width: 600px;
-        margin: 40px auto;
-        padding: 24px;
-        font-family: system-ui, -apple-system, sans-serif;
-        line-height: 1.6;
-        color: #1f2937;
-      }
-      .app-info h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
-      .app-info h2 { font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
-      .app-info a { color: #4f46e5; }
-      .js-loaded .app-info { display: none; }
-    </style>
   </head>
   <body>
     <div id="app"></div>
-    <section class="app-info">
-      <h1>TimeBox</h1>
-      <p>
-        TimeBox — веб-приложение для организаторов групповых занятий (тренировок, мастер-классов, консультаций),
-        позволяющее делиться свободными временными окнами с клиентами. Организатор создаёт временные слоты,
-        формирует ссылку и отправляет её клиенту. Клиент выбирает удобное время, а организатор подтверждает запись.
-        Все данные хранятся локально на устройстве пользователя, без серверного бекенда.
-      </p>
-
-      <h2>Как TimeBox использует данные Google</h2>
-      <p>
-        TimeBox запрашивает доступ к Google Календарю исключительно для следующих целей:
-      </p>
-      <ul>
-        <li><strong>Создание событий</strong> — когда клиент подтверждает запись, TimeBox создаёт событие в Google Календаре организатора.</li>
-        <li><strong>Проверка занятости</strong> — при создании окон TimeBox может проверять календарь организатора, чтобы исключить уже занятое время.</li>
-      </ul>
-      <p>
-        Данные календаря <strong>не передаются</strong> третьим лицам, <strong>не сохраняются</strong> на серверах
-        (приложение работает полностью на устройстве пользователя) и используются только для описанных выше целей.
-      </p>
-      <p>
-        <a href="/timebox/privacy.html">Политика конфиденциальности</a>
-      </p>
-    </section>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

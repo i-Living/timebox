@@ -15,7 +15,7 @@ export default defineConfig({
       manifest: {
         name: 'TimeBox',
         short_name: 'TimeBox',
-        description: 'Делись свободными окнами без бекенда',
+        description: 'Делись свободным временным окном',
         theme_color: '#4f46e5',
         background_color: '#f8f9fa',
         display: 'standalone',
