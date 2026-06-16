@@ -16,7 +16,7 @@ export function BottomNav({ active, onSelect }: Props) {
       </button>
       <button class={`nav-item ${active === 'settings' ? 'active' : ''}`} onClick={() => onSelect('settings')}>
         <span class="nav-icon">⚙️</span>
-        Ещё
+        Настройки
       </button>
     </div>
   );
