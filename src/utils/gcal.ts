@@ -85,7 +85,7 @@ export function clearToken(): void {
 
 // ─── OAuth flow ───
 
-export async function connectGoogleCalendar(clientId: string): Promise<TokenData> {
+export async function connectGoogleCalendar(clientId: string, clientSecret?: string): Promise<TokenData> {
   await loadGisScript();
 
   const codeVerifier = generateCodeVerifier();
@@ -113,6 +113,7 @@ export async function connectGoogleCalendar(clientId: string): Promise<TokenData
             clientId,
             response.code,
             codeVerifier,
+            clientSecret,
           );
           resolve(token);
         } catch (e) {
@@ -129,17 +130,23 @@ async function exchangeCodeForTokens(
   clientId: string,
   code: string,
   codeVerifier: string,
+  clientSecret?: string,
 ): Promise<TokenData> {
+  const params: Record<string, string> = {
+    code,
+    client_id: clientId,
+    redirect_uri: window.location.origin,
+    grant_type: 'authorization_code',
+    code_verifier: codeVerifier,
+  };
+  if (clientSecret) {
+    params.client_secret = clientSecret;
+  }
+
   const resp = await fetch(TOKEN_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      code,
-      client_id: clientId,
-      redirect_uri: window.location.origin,
-      grant_type: 'authorization_code',
-      code_verifier: codeVerifier,
-    }),
+    body: new URLSearchParams(params),
   });
 
   if (!resp.ok) {
@@ -175,7 +182,7 @@ async function exchangeCodeForTokens(
 
 // ─── Token refresh ───
 
-export async function getAccessToken(clientId: string): Promise<string> {
+export async function getAccessToken(clientId: string, clientSecret?: string): Promise<string> {
   const token = getStoredToken();
   if (!token) throw new Error('Not connected to Google Calendar');
 
@@ -188,14 +195,19 @@ export async function getAccessToken(clientId: string): Promise<string> {
     throw new Error('Token expired. Please reconnect Google Calendar.');
   }
 
+  const refreshParams: Record<string, string> = {
+    client_id: clientId,
+    grant_type: 'refresh_token',
+    refresh_token: token.refresh_token,
+  };
+  if (clientSecret) {
+    refreshParams.client_secret = clientSecret;
+  }
+
   const resp = await fetch(TOKEN_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: clientId,
-      grant_type: 'refresh_token',
-      refresh_token: token.refresh_token,
-    }),
+    body: new URLSearchParams(refreshParams),
   });
 
   if (!resp.ok) {
@@ -223,8 +235,9 @@ export interface GCalEvent {
 export async function createCalendarEvent(
   clientId: string,
   event: GCalEvent,
+  clientSecret?: string,
 ): Promise<string> {
-  const accessToken = await getAccessToken(clientId);
+  const accessToken = await getAccessToken(clientId, clientSecret);
 
   const tz = event.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
   const body: any = {
@@ -260,8 +273,9 @@ export async function getFreeBusy(
   clientId: string,
   timeMin: string,
   timeMax: string,
+  clientSecret?: string,
 ): Promise<Array<{ start: string; end: string }>> {
-  const accessToken = await getAccessToken(clientId);
+  const accessToken = await getAccessToken(clientId, clientSecret);
 
   const url = CALENDAR_API + '/freeBusy';
   const resp = await fetch(url, {

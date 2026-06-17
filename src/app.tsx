@@ -69,6 +69,8 @@ export function App() {
     const clientId = localStorage.getItem('timebox_gcal_client_id') || '';
     if (!clientId) return;
 
+    const clientSecret = localStorage.getItem('timebox_gcal_client_secret') || import.meta.env.VITE_GOOGLE_CLIENT_SECRET || '';
+
     const data = load();
     const confirmedNames = slot.bookings
       .filter(b => b.status === 'confirmed')
@@ -82,7 +84,7 @@ export function App() {
         slot.notes,
         data.timezone,
       );
-      await createCalendarEvent(clientId, event);
+      await createCalendarEvent(clientId, event, clientSecret);
     } catch (e) {
       // Silently fail — the booking is already saved locally
       console.error('GCal event creation failed:', e);
