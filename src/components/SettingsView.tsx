@@ -11,16 +11,10 @@ const DAY_LABELS = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 const DURATION_PRESETS = [30, 45, 60, 90, 120];
 
 const GCAL_CLIENT_ID_KEY = 'timebox_gcal_client_id';
-const GCAL_CLIENT_SECRET_KEY = 'timebox_gcal_client_secret';
 
 function getSavedClientId(): string {
   const envId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
   return localStorage.getItem(GCAL_CLIENT_ID_KEY) || envId;
-}
-
-function getSavedClientSecret(): string {
-  const envSecret = import.meta.env.VITE_GOOGLE_CLIENT_SECRET || '';
-  return localStorage.getItem(GCAL_CLIENT_SECRET_KEY) || envSecret;
 }
 
 export function SettingsView({ data, onChange }: Props) {
@@ -88,11 +82,10 @@ export function SettingsView({ data, onChange }: Props) {
       setGcalError('Client ID не настроен');
       return;
     }
-    const clientSecret = getSavedClientSecret();
     setGcalLoading(true);
     setGcalError('');
     try {
-      const token = await connectGoogleCalendar(clientId, clientSecret);
+      const token = await connectGoogleCalendar(clientId);
       setGcalConnected(true);
       if (token.email) setGcalEmail(token.email);
     } catch (e: any) {

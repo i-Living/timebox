@@ -1,66 +1,79 @@
 
 /**
- * Google Calendar integration via OAuth 2.0 PKCE (client-side only).
+ * Google Calendar integration via Google Identity Services (GIS) token client.
  *
- * Setup:
- * 1. Create a Google Cloud Project at https://console.cloud.google.com
- * 2. Enable Calendar API
- * 3. Create OAuth 2.0 Client ID (Web application)
- * 4. Add authorized JS origins: http://localhost:5173 (dev) + your prod URL
- * 5. Set VITE_GOOGLE_CLIENT_ID in .env or enter in settings
+ * This is the canonical client-side OAuth flow for SPAs with no backend:
+ *   - GIS handles the entire auth-code → access_token exchange inside its popup
+ *   - No PKCE, no client_secret, no refresh_token
+ *   - Access token lives ~1 hour; when it expires we call requestAccessToken()
+ *     again — since consent is already granted, the popup opens and closes
+ *     silently (instant re-consent)
+ *
+ * Setup (one-time, in Google Cloud Console):
+ * 1. Create / select a project: https://console.cloud.google.com
+ * 2. Enable Google Calendar API in API Library
+ * 3. Create OAuth 2.0 Client ID — Application type: "Web application"
+ * 4. Authorized JavaScript origins (scheme + host + port, NO path):
+ *      http://localhost:5173                (dev)
+ *      https://<your-gh-pages>.github.io    (prod)
+ * 5. Put the Client ID into VITE_GOOGLE_CLIENT_ID in .env
+ *
+ * NOTE: never put a client_secret in a VITE_ env var — it would be bundled
+ * into client JS and become public. The token-client flow does not need one.
  */
 
 const TOKEN_KEY = 'gcal_token';
 const SCRIPT_URL = 'https://accounts.google.com/gsi/client';
-const TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token';
 const CALENDAR_API = 'https://www.googleapis.com/calendar/v3';
+const USERINFO_URL = 'https://www.googleapis.com/oauth2/v2/userinfo';
+
+const SCOPES =
+  'https://www.googleapis.com/auth/calendar.events ' +
+  'https://www.googleapis.com/auth/calendar.readonly';
 
 interface TokenData {
   access_token: string;
-  refresh_token?: string;
-  expires_at: number;
+  expires_at: number; // Date.now() + expires_in*1000
   email?: string;
 }
 
-// ─── PKCE helpers ───
-
-function generateCodeVerifier(): string {
-  const array = new Uint8Array(32);
-  crypto.getRandomValues(array);
-  return base64url(array);
-}
-
-function base64url(buffer: Uint8Array): string {
-  return btoa(String.fromCharCode(...buffer))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-}
-
-// ─── Script loader ───
+// ─── GIS script loader ───
 
 let gisLoaded = false;
+let gisLoadPromise: Promise<void> | null = null;
 
 function loadGisScript(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (gisLoaded) resolve();
-    if (document.querySelector('script[src="' + SCRIPT_URL + '"]')) {
-      const check = setInterval(function() {
+  if (gisLoaded) return Promise.resolve();
+  if (gisLoadPromise) return gisLoadPromise;
+
+  gisLoadPromise = new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector(
+      'script[src="' + SCRIPT_URL + '"]',
+    ) as HTMLScriptElement | null;
+    if (existing) {
+      // Tag already present — wait for window.google to become available
+      const check = setInterval(() => {
         if (typeof (window as any).google?.accounts?.oauth2 !== 'undefined') {
           clearInterval(check);
           gisLoaded = true;
           resolve();
         }
-      }, 100);
+      }, 50);
       return;
     }
     const script = document.createElement('script');
     script.src = SCRIPT_URL;
     script.async = true;
-    script.onload = function() { gisLoaded = true; resolve(); };
-    script.onerror = function() { reject(new Error('Failed to load Google GIS script')); };
+    script.defer = true;
+    script.onload = () => {
+      gisLoaded = true;
+      resolve();
+    };
+    script.onerror = () =>
+      reject(new Error('Failed to load Google Identity Services script'));
     document.head.appendChild(script);
   });
+  return gisLoadPromise;
 }
 
 // ─── Token storage ───
@@ -69,7 +82,9 @@ export function getStoredToken(): TokenData | null {
   try {
     const raw = localStorage.getItem(TOKEN_KEY);
     if (!raw) return null;
-    return JSON.parse(raw);
+    const t = JSON.parse(raw) as TokenData;
+    if (!t.access_token || !t.expires_at) return null;
+    return t;
   } catch {
     return null;
   }
@@ -83,141 +98,97 @@ export function clearToken(): void {
   localStorage.removeItem(TOKEN_KEY);
 }
 
-// ─── OAuth flow ───
+// ─── Core: request an access token via GIS token client ───
 
-export async function connectGoogleCalendar(clientId: string, clientSecret?: string): Promise<TokenData> {
-  await loadGisScript();
+interface TokenResponse {
+  access_token: string;
+  expires_in: number;
+}
 
-  const codeVerifier = generateCodeVerifier();
-  sessionStorage.setItem('gcal_code_verifier', codeVerifier);
-
-  return new Promise((resolve, reject) => {
+/**
+ * Open the GIS popup and resolve with a fresh access_token + expires_in.
+ * On first call this shows the Google consent screen.
+ * On subsequent calls (consent already granted) the popup opens and closes
+ * silently — the user sees at most a brief flash.
+ */
+function requestAccessToken(clientId: string): Promise<TokenResponse> {
+  return new Promise<TokenResponse>((resolve, reject) => {
     const google = (window as any).google;
     if (!google?.accounts?.oauth2) {
-      reject(new Error('Google GIS not loaded'));
+      reject(new Error('Google Identity Services not loaded'));
       return;
     }
 
-    const codeClient = google.accounts.oauth2.initCodeClient({
+    const tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: clientId,
-      scope: 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.readonly',
-      ux_mode: 'popup',
-      callback: async (response: any) => {
-        if (response.error) {
-          reject(new Error(response.error_description || response.error));
+      scope: SCOPES,
+      callback: (resp: any) => {
+        if (resp.error) {
+          reject(new Error(resp.error_description || resp.error || 'OAuth error'));
           return;
         }
-
-        try {
-          const token = await exchangeCodeForTokens(
-            clientId,
-            response.code,
-            codeVerifier,
-            clientSecret,
-          );
-          resolve(token);
-        } catch (e) {
-          reject(e);
+        if (!resp.access_token) {
+          reject(new Error('No access_token in GIS response'));
+          return;
         }
+        resolve({
+          access_token: resp.access_token as string,
+          expires_in: (resp.expires_in as number) || 3600,
+        });
+      },
+      error_callback: (err: any) => {
+        // Fires when popup is blocked, closed by user, network failure, etc.
+        reject(new Error(err?.message || err?.type || 'GIS popup failed'));
       },
     });
 
-    codeClient.requestCode();
+    tokenClient.requestAccessToken();
   });
 }
 
-async function exchangeCodeForTokens(
-  clientId: string,
-  code: string,
-  codeVerifier: string,
-  clientSecret?: string,
-): Promise<TokenData> {
-  const params: Record<string, string> = {
-    code,
-    client_id: clientId,
-    redirect_uri: window.location.origin,
-    grant_type: 'authorization_code',
-    code_verifier: codeVerifier,
-  };
-  if (clientSecret) {
-    params.client_secret = clientSecret;
-  }
+// ─── Public: connect (initial consent) ───
 
-  const resp = await fetch(TOKEN_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams(params),
-  });
+export async function connectGoogleCalendar(clientId: string): Promise<TokenData> {
+  await loadGisScript();
 
-  if (!resp.ok) {
-    const err = await resp.text();
-    throw new Error('Token exchange failed: ' + err);
-  }
-
-  const data = await resp.json();
+  const resp = await requestAccessToken(clientId);
   const token: TokenData = {
-    access_token: data.access_token,
-    refresh_token: data.refresh_token,
-    expires_at: Date.now() + (data.expires_in || 3600) * 1000,
+    access_token: resp.access_token,
+    expires_at: Date.now() + resp.expires_in * 1000,
   };
 
-  // Fetch user email
+  // Best-effort: fetch user email for the UI badge
   try {
-    const userResp = await fetch(
-      'https://www.googleapis.com/oauth2/v2/userinfo',
-      { headers: { Authorization: 'Bearer ' + token.access_token } },
-    );
+    const userResp = await fetch(USERINFO_URL, {
+      headers: { Authorization: 'Bearer ' + token.access_token },
+    });
     if (userResp.ok) {
-      const userData = await userResp.json();
-      token.email = userData.email;
+      token.email = (await userResp.json()).email;
     }
   } catch {
     // Non-critical
   }
 
   saveToken(token);
-  sessionStorage.removeItem('gcal_code_verifier');
   return token;
 }
 
-// ─── Token refresh ───
+// ─── Public: get a valid access token (silent refresh if expired) ───
 
-export async function getAccessToken(clientId: string, clientSecret?: string): Promise<string> {
+export async function getAccessToken(clientId: string): Promise<string> {
   const token = getStoredToken();
   if (!token) throw new Error('Not connected to Google Calendar');
 
+  // Still valid (60s safety margin)
   if (token.expires_at > Date.now() + 60000) {
     return token.access_token;
   }
 
-  if (!token.refresh_token) {
-    clearToken();
-    throw new Error('Token expired. Please reconnect Google Calendar.');
-  }
-
-  const refreshParams: Record<string, string> = {
-    client_id: clientId,
-    grant_type: 'refresh_token',
-    refresh_token: token.refresh_token,
-  };
-  if (clientSecret) {
-    refreshParams.client_secret = clientSecret;
-  }
-
-  const resp = await fetch(TOKEN_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams(refreshParams),
-  });
-
-  if (!resp.ok) {
-    clearToken();
-    throw new Error('Token refresh failed. Please reconnect Google Calendar.');
-  }
-
-  const data = await resp.json();
-  token.access_token = data.access_token;
-  token.expires_at = Date.now() + (data.expires_in || 3600) * 1000;
+  // Expired — request a new one (silent re-consent since already authorized)
+  await loadGisScript();
+  const fresh = await requestAccessToken(clientId);
+  token.access_token = fresh.access_token;
+  token.expires_at = Date.now() + fresh.expires_in * 1000;
   saveToken(token);
   return token.access_token;
 }
@@ -235,9 +206,8 @@ export interface GCalEvent {
 export async function createCalendarEvent(
   clientId: string,
   event: GCalEvent,
-  clientSecret?: string,
 ): Promise<string> {
-  const accessToken = await getAccessToken(clientId, clientSecret);
+  const accessToken = await getAccessToken(clientId);
 
   const tz = event.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
   const body: any = {
@@ -245,16 +215,13 @@ export async function createCalendarEvent(
     start: { dateTime: event.start, timeZone: tz },
     end: { dateTime: event.end, timeZone: tz },
   };
-
-  if (event.description) {
-    body.description = event.description;
-  }
+  if (event.description) body.description = event.description;
 
   const url = CALENDAR_API + '/calendars/primary/events';
   const resp = await fetch(url, {
     method: 'POST',
     headers: {
-      'Authorization': 'Bearer ' + accessToken,
+      Authorization: 'Bearer ' + accessToken,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
@@ -264,7 +231,6 @@ export async function createCalendarEvent(
     const err = await resp.text();
     throw new Error('Failed to create event: ' + err);
   }
-
   const data = await resp.json();
   return data.id as string;
 }
@@ -273,15 +239,14 @@ export async function getFreeBusy(
   clientId: string,
   timeMin: string,
   timeMax: string,
-  clientSecret?: string,
 ): Promise<Array<{ start: string; end: string }>> {
-  const accessToken = await getAccessToken(clientId, clientSecret);
+  const accessToken = await getAccessToken(clientId);
 
   const url = CALENDAR_API + '/freeBusy';
   const resp = await fetch(url, {
     method: 'POST',
     headers: {
-      'Authorization': 'Bearer ' + accessToken,
+      Authorization: 'Bearer ' + accessToken,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -295,10 +260,8 @@ export async function getFreeBusy(
     const err = await resp.text();
     throw new Error('Failed to get free/busy: ' + err);
   }
-
   const data = await resp.json();
-  const busy = data.calendars?.primary?.busy || [];
-  return busy;
+  return data.calendars?.primary?.busy || [];
 }
 
 /**
