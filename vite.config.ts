@@ -4,7 +4,7 @@ import preact from '@preact/preset-vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  base: '/timebox/',
+  base: '/',
   plugins: [
     preact(),
     VitePWA({
@@ -22,12 +22,12 @@ export default defineConfig({
         orientation: 'portrait',
         icons: [
           {
-            src: '/timebox/icon-192.png',
+            src: '/icon-192.png',
             sizes: '192x192',
             type: 'image/png',
           },
           {
-            src: '/timebox/icon-512.png',
+            src: '/icon-512.png',
             sizes: '512x512',
             type: 'image/png',
           },

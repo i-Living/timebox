@@ -15,7 +15,7 @@
  * 3. Create OAuth 2.0 Client ID — Application type: "Web application"
  * 4. Authorized JavaScript origins (scheme + host + port, NO path):
  *      http://localhost:5173                (dev)
- *      https://<your-gh-pages>.github.io    (prod)
+ *      https://timeboxcalendar.ru           (prod)
  * 5. Put the Client ID into VITE_GOOGLE_CLIENT_ID in .env
  *
  * NOTE: never put a client_secret in a VITE_ env var — it would be bundled
