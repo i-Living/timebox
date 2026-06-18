@@ -282,6 +282,54 @@ export async function deleteCalendarEvent(
   }
 }
 
+/**
+ * Find an existing TimeBox event at the given slot time.
+ * Returns the event ID if found, or null if no matching event exists.
+ * Used to re-use orphan events (created before gcalEventId was tracked).
+ */
+export async function findEventForSlot(
+  clientId: string,
+  slot: { date: string; start: string; end: string },
+): Promise<string | null> {
+  const accessToken = await getAccessToken(clientId);
+
+  const y = slot.date.slice(0, 4);
+  const m = slot.date.slice(5, 7);
+  const d = slot.date.slice(8, 10);
+
+  const timeMin = y + '-' + m + '-' + d + 'T00:00:00Z';
+  const timeMax = y + '-' + m + '-' + d + 'T23:59:59Z';
+
+  const url = CALENDAR_API + '/calendars/primary/events?timeMin=' + encodeURIComponent(timeMin) +
+    '&timeMax=' + encodeURIComponent(timeMax) +
+    '&orderBy=startTime&singleEvents=true';
+
+  const resp = await fetch(url, {
+    headers: { Authorization: 'Bearer ' + accessToken },
+  });
+  if (!resp.ok) return null;
+
+  const data = await resp.json();
+  const items: any[] = data.items || [];
+
+  // Find an event at the same time (±1min) that looks like a TimeBox event
+  const slotStart = slot.date + 'T' + slot.start;
+  const slotEnd = slot.date + 'T' + slot.end;
+
+  for (const item of items) {
+    const eventStart = (item.start?.dateTime || '').slice(0, 16);
+    const eventEnd = (item.end?.dateTime || '').slice(0, 16);
+    if (eventStart === slotStart && eventEnd === slotEnd) {
+      // Belongs to TimeBox?
+      const desc = item.description || '';
+      if (desc.includes('Создано через TimeBox')) {
+        return item.id;
+      }
+    }
+  }
+  return null;
+}
+
 export async function getFreeBusy(
   clientId: string,
   timeMin: string,

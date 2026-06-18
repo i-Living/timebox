@@ -4,7 +4,7 @@ import { useState, useEffect } from 'preact/hooks';
 import type { Slot } from '../types';
 import { load, save, expandSlots, addSlot, updateSlot, deleteSlot } from '../store';
 import { today, getWeekStart, addDays, formatDateFull } from '../utils/dates';
-import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, slotToEvent, getStoredToken } from '../utils/gcal';
+import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, slotToEvent, getStoredToken, findEventForSlot } from '../utils/gcal';
 import { WeekStrip } from './WeekStrip';
 import { Button } from './Button';
 import { SlotCard } from './SlotCard';
@@ -64,6 +64,7 @@ export function OrganizerView() {
 
     try {
       if (slot.gcalEventId) {
+        // Update existing event
         try {
           await updateCalendarEvent(clientId, slot.gcalEventId, gcalEvent);
           return null; // no change to local slot
@@ -73,6 +74,12 @@ export function OrganizerView() {
           return { ...slot, gcalEventId: eventId };
         }
       } else {
+        // No event ID saved locally — try to find an orphan event at this time
+        const orphanId = await findEventForSlot(clientId, slot);
+        if (orphanId) {
+          await updateCalendarEvent(clientId, orphanId, gcalEvent);
+          return { ...slot, gcalEventId: orphanId };
+        }
         const eventId = await createCalendarEvent(clientId, gcalEvent);
         return { ...slot, gcalEventId: eventId };
       }
@@ -85,22 +92,26 @@ export function OrganizerView() {
   const handleSaveSlot = async (slot: Slot) => {
     const isNew = !data.slots.find(s => s.id === slot.id);
 
-    if (isNew) {
-      setData(d => ({ ...d, slots: addSlot(d.slots, slot) }));
-      showToast('Окно создано');
-    } else {
-      setData(d => ({ ...d, slots: updateSlot(d.slots, slot) }));
-      showToast('Окно обновлено');
-    }
-
-    // Sync to Google Calendar (fire-and-forget)
+    // Sync to Google Calendar FIRST, so gcalEventId is saved immediately
+    let finalSlot = slot;
     const gcalClientId = localStorage.getItem('timebox_gcal_client_id') || import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
     const token = getStoredToken();
-    if (!gcalClientId || !token) return;
+    if (gcalClientId && token) {
+      try {
+        const result = await syncSlotToGcal(slot, gcalClientId, data.organizerName || '');
+        if (result) finalSlot = result;
+      } catch (e) {
+        console.error('GCal sync error:', e);
+      }
+    }
 
-    const updatedSlot = await syncSlotToGcal(slot, gcalClientId, data.organizerName || '');
-    if (updatedSlot && updatedSlot.gcalEventId !== slot.gcalEventId) {
-      setData(d => ({ ...d, slots: updateSlot(d.slots, updatedSlot) }));
+    // Save locally with the (potentially updated) gcalEventId
+    if (isNew) {
+      setData(d => ({ ...d, slots: addSlot(d.slots, finalSlot) }));
+      showToast('Окно создано');
+    } else {
+      setData(d => ({ ...d, slots: updateSlot(d.slots, finalSlot) }));
+      showToast('Окно обновлено');
     }
   };
 
