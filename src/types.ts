@@ -4,6 +4,7 @@ export interface Booking {
   status: 'pending' | 'confirmed' | 'cancelled';
   bookedAt: string;
   attendance?: 'present' | 'late' | 'no-show';
+  gcalEventId?: string;
 }
 
 export interface Slot {
@@ -19,6 +20,7 @@ export interface Slot {
     freq: 'daily' | 'weekly' | 'biweekly';
     until: string;
   };
+  gcalEventId?: string;
 }
 
 export interface OrganizerData {

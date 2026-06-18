@@ -235,6 +235,36 @@ export async function createCalendarEvent(
   return data.id as string;
 }
 
+export async function updateCalendarEvent(
+  clientId: string,
+  eventId: string,
+  event: GCalEvent,
+): Promise<void> {
+  const accessToken = await getAccessToken(clientId);
+  const tz = event.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const body: any = {
+    summary: event.summary,
+    start: { dateTime: event.start, timeZone: tz },
+    end: { dateTime: event.end, timeZone: tz },
+  };
+  if (event.description) body.description = event.description;
+
+  const url = CALENDAR_API + '/calendars/primary/events/' + encodeURIComponent(eventId);
+  const resp = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      Authorization: 'Bearer ' + accessToken,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!resp.ok) {
+    const err = await resp.text();
+    throw new Error('Failed to update event: ' + err);
+  }
+}
+
 export async function getFreeBusy(
   clientId: string,
   timeMin: string,

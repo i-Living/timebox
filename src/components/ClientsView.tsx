@@ -153,7 +153,7 @@ export function ClientsView({ slots, onChange }: Props) {
                       {client.contact && <span style="font-size:13px;color:var(--text-secondary);margin-left:8px;">{client.contact}</span>}
                     </div>
                     <div style="display:flex;align-items:center;gap:8px;">
-                      <span style="font-size:13px;font-weight:600;">{client.totalVisits}×</span>
+                      <span style="font-size:13px;font-weight:600;">{`${client.totalVisits} ${pluralize(client.totalVisits, 'раз', 'раза', 'раз')}`}</span>
                       {onChange && (
                         <Button variant="ghost" size="sm"
                           style="padding:2px 6px;font-size:14px;line-height:1;min-width:0;color:var(--text-secondary);"
@@ -165,9 +165,9 @@ export function ClientsView({ slots, onChange }: Props) {
                   <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">
                     {totalMarked > 0 && (
                       <span>
-                        <Check size={12} style="vertical-align:middle;" />{client.attendance.present}{' '}
-                        <Clock size={12} style="vertical-align:middle;" />{client.attendance.late}{' '}
-                        <X size={12} style="vertical-align:middle;" />{client.attendance.noShow}
+                        <Check size={12} style="vertical-align:middle;margin:0 2px 2px 0;" />{client.attendance.present}
+                        <Clock size={12} style="vertical-align:middle;margin:0 2px 2px 6px;" />{client.attendance.late}
+                        <X size={12} style="vertical-align:middle;margin:0 2px 2px 6px;" />{client.attendance.noShow}
                         {' · '}
                       </span>
                     )}

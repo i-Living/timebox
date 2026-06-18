@@ -4,6 +4,7 @@ import { useState, useEffect } from 'preact/hooks';
 import type { Slot } from '../types';
 import { load, save, expandSlots, addSlot, updateSlot, deleteSlot } from '../store';
 import { today, getWeekStart, addDays, formatDateFull } from '../utils/dates';
+import { createCalendarEvent, updateCalendarEvent, slotToEvent, getStoredToken } from '../utils/gcal';
 import { WeekStrip } from './WeekStrip';
 import { Button } from './Button';
 import { SlotCard } from './SlotCard';
@@ -54,13 +55,42 @@ export function OrganizerView() {
     setTimeout(() => setToast(''), 2000);
   };
 
-  const handleSaveSlot = (slot: Slot) => {
-    if (data.slots.find(s => s.id === slot.id)) {
-      setData(d => ({ ...d, slots: updateSlot(d.slots, slot) }));
-      showToast('Окно обновлено');
-    } else {
-      setData(d => ({ ...d, slots: addSlot(d.slots, slot) }));
+  const handleSaveSlot = async (slot: Slot) => {
+    const isNew = !data.slots.find(s => s.id === slot.id);
+    let savedSlot: Slot;
+
+    if (isNew) {
+      savedSlot = { ...slot };
+      setData(d => ({ ...d, slots: addSlot(d.slots, savedSlot) }));
       showToast('Окно создано');
+    } else {
+      savedSlot = slot;
+      setData(d => ({ ...d, slots: updateSlot(d.slots, savedSlot) }));
+      showToast('Окно обновлено');
+    }
+
+    // Sync to Google Calendar (fire-and-forget)
+    const gcalClientId = localStorage.getItem('timebox_gcal_client_id') || import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+    const token = getStoredToken();
+    if (!gcalClientId || !token) return;
+
+    const confirmedNames = savedSlot.bookings
+      .filter(b => b.status === 'confirmed')
+      .map(b => b.name);
+
+    const gcalEvent = slotToEvent(savedSlot, data.organizerName || '', confirmedNames, savedSlot.notes);
+
+    try {
+      if (savedSlot.gcalEventId) {
+        await updateCalendarEvent(gcalClientId, savedSlot.gcalEventId, gcalEvent);
+      } else {
+        const eventId = await createCalendarEvent(gcalClientId, gcalEvent);
+        // Save event ID back to the slot
+        const updatedSlot = { ...savedSlot, gcalEventId: eventId };
+        setData(d => ({ ...d, slots: updateSlot(d.slots, updatedSlot) }));
+      }
+    } catch (e) {
+      console.error('GCal sync error:', e);
     }
   };
 
