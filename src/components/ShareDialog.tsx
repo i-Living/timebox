@@ -3,7 +3,6 @@ import { useState } from 'preact/hooks';
 import type { Slot } from '../types';
 import { getFreeSlots } from '../store';
 import { today, addDays, formatDateFull } from '../utils/dates';
-import { encodeSharePayload, buildSharePayload } from '../utils/url';
 
 interface Props {
   organizerName: string;
@@ -14,29 +13,55 @@ interface Props {
 export function ShareDialog({ organizerName, slots, onClose }: Props) {
   const [fromDate, setFromDate] = useState(today());
   const [toDate, setToDate] = useState(addDays(today(), 7));
-  const [link, setLink] = useState('');
+  const [shareText, setShareText] = useState('');
   const [copied, setCopied] = useState(false);
 
   const freeSlots = getFreeSlots(slots, fromDate, toDate);
 
-  const generateLink = () => {
-    const payload = buildSharePayload(organizerName, freeSlots);
-    const fullUrl = window.location.origin + window.location.pathname + encodeSharePayload(payload);
-    setLink(fullUrl);
+  const generateText = () => {
+    const lines: string[] = [];
+    lines.push('📅 Свободные окна — TimeBox');
+    lines.push('');
+    if (organizerName) {
+      lines.push('Организатор: ' + organizerName);
+      lines.push('');
+    }
+
+    // Group free slots by date
+    const byDate: Record<string, typeof freeSlots> = {};
+    for (const s of freeSlots) {
+      if (!byDate[s.date]) byDate[s.date] = [];
+      byDate[s.date].push(s);
+    }
+
+    const sortedDates = Object.keys(byDate).sort();
+    for (const date of sortedDates) {
+      lines.push(formatDateFull(date));
+      for (const s of byDate[date]) {
+        const remaining = s.bookings.filter(b => b.status === 'confirmed').length;
+        const free = s.capacity - remaining;
+        if (s.capacity > 1) {
+          lines.push('  ' + s.start + '–' + s.end + ' — ' + free + ' мест');
+        } else {
+          lines.push('  ' + s.start + '–' + s.end);
+        }
+      }
+      lines.push('');
+    }
+
+    if (sortedDates.length === 0) {
+      lines.push('Нет свободных окон.');
+      lines.push('');
+    }
+
+    lines.push('Напишите мне, чтобы записаться!');
+    setShareText(lines.join('\n'));
   };
 
-  const copyLink = async () => {
-    await navigator.clipboard.writeText(link);
+  const copyText = async () => {
+    await navigator.clipboard.writeText(shareText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const shareNative = async () => {
-    if (navigator.share) {
-      await navigator.share({ title: 'TimeBox – свободные окна', text: link, url: link });
-    } else {
-      copyLink();
-    }
   };
 
   return (
@@ -55,7 +80,7 @@ export function ShareDialog({ organizerName, slots, onClose }: Props) {
           </div>
         </div>
 
-        {!link && (
+        {!shareText && (
           <>
             <div style="font-size:14px;color:var(--text-secondary);">
               Свободных окон: <strong>{freeSlots.length}</strong>
@@ -78,22 +103,25 @@ export function ShareDialog({ organizerName, slots, onClose }: Props) {
               </div>
             )}
 
-            <button class="btn btn-primary btn-block" onClick={generateLink} disabled={freeSlots.length === 0}>
-              Сгенерировать ссылку
+            <button class="btn btn-primary btn-block" onClick={generateText} disabled={freeSlots.length === 0}>
+              📋 Сгенерировать текст
             </button>
           </>
         )}
 
-        {link && (
+        {shareText && (
           <>
-            <div class="share-link-box">{link}</div>
-            <button class="btn btn-primary btn-block" onClick={copyLink}>
-              {copied ? '✓ Скопировано!' : '📋 Копировать ссылку'}
+            <div style="margin:12px 0;">
+              <textarea class="form-input" rows={Math.min(freeSlots.length + 6, 14)}
+                value={shareText} readOnly
+                style="font-size:13px;line-height:1.5;resize:none;background:var(--bg);"
+                onClick={e => (e.target as HTMLTextAreaElement).select()}
+              />
+            </div>
+            <button class="btn btn-primary btn-block" onClick={copyText}>
+              {copied ? '✓ Скопировано!' : '📋 Копировать текст'}
             </button>
-            <button class="btn btn-outline btn-block" onClick={shareNative}>
-              📱 Поделиться
-            </button>
-            <button class="btn btn-ghost btn-block" onClick={() => setLink('')}>
+            <button class="btn btn-ghost btn-block" onClick={() => setShareText('')}>
               ↻ Сгенерировать заново
             </button>
           </>

@@ -1,4 +1,3 @@
-
 export interface Booking {
   name: string;
   contact: string;
@@ -22,15 +21,6 @@ export interface Slot {
   };
 }
 
-export interface SlotPublic {
-  id: string;
-  date: string;
-  start: string;
-  end: string;
-  capacity: number;
-  bookedCount: number;
-}
-
 export interface OrganizerData {
   version: 1;
   organizerName: string;
@@ -40,19 +30,4 @@ export interface OrganizerData {
   workingHoursStart: string;
   workingHoursEnd: string;
   workingDays: number[];
-}
-
-export interface SharePayload {
-  v: 1;
-  organizer: string;
-  slots: SlotPublic[];
-  at: string;
-}
-
-export interface BookPayload {
-  v: 1;
-  slotId: string;
-  name: string;
-  contact: string;
-  at: string;
 }
