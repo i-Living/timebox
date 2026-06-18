@@ -32,6 +32,15 @@ export default defineConfig({
             type: 'image/png',
           },
         ],
+        share_target: {
+          action: '/',
+          method: 'GET',
+          params: {
+            title: 'title',
+            text: 'text',
+            url: 'url',
+          },
+        },
       },
     }),
   ],

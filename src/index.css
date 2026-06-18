@@ -17,6 +17,28 @@
   --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
   --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --toast-bg: #1a1a2e;
+  --toast-text: #fff;
+}
+
+[data-theme="dark"] {
+  --bg: #0f0f23;
+  --surface: #1a1a2e;
+  --border: #2d2d44;
+  --text: #e8e8f0;
+  --text-secondary: #9ca3af;
+  --primary: #6366f1;
+  --primary-light: #1e1b4b;
+  --success: #34d399;
+  --success-light: #064e3b;
+  --danger: #f87171;
+  --danger-light: #7f1d1d;
+  --warning: #fbbf24;
+  --warning-light: #78350f;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.4);
+  --toast-bg: #e8e8f0;
+  --toast-text: #1a1a2e;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -204,6 +226,30 @@ body {
 }
 
 .slot-arrow { font-size: 18px; color: var(--text-secondary); }
+
+.slot-card-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: background 0.15s;
+}
+.slot-card-btn:hover { background: var(--bg); }
+
+.toast-action {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
 
 .empty-state {
   text-align: center;
@@ -399,13 +445,17 @@ body {
   bottom: 80px;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--text);
-  color: white;
+  background: var(--toast-bg);
+  color: var(--toast-text);
   padding: 10px 20px;
   border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
   z-index: 200;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   animation: toast-in 0.2s ease;
 }
 @keyframes toast-in { from { opacity: 0; transform: translateX(-50%) translateY(10px); } }

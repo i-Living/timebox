@@ -62,6 +62,62 @@ export function SettingsView({ data, onChange }: Props) {
     },
   ];
 
+  // Theme
+  const [theme, setThemeState] = useState(() => localStorage.getItem('timebox_theme') || 'light');
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    setThemeState(next);
+    localStorage.setItem('timebox_theme', next);
+    document.documentElement.dataset.theme = next;
+  };
+
+  // Data export/import
+  const [resetConfirm, setResetConfirm] = useState(false);
+
+  const handleExport = () => {
+    const raw = localStorage.getItem('timebox_data');
+    if (!raw) return;
+    const blob = new Blob([raw], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'timebox-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = (e: Event) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result as string);
+        if (!data.slots || !Array.isArray(data.slots)) {
+          alert('Неверный формат файла');
+          return;
+        }
+        localStorage.setItem('timebox_data', JSON.stringify(data));
+        window.location.reload();
+      } catch {
+        alert('Ошибка чтения файла');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleReset = () => {
+    if (!resetConfirm) {
+      setResetConfirm(true);
+      setTimeout(() => setResetConfirm(false), 3000);
+      return;
+    }
+    localStorage.removeItem('timebox_data');
+    localStorage.removeItem('timebox_onboarded');
+    window.location.reload();
+  };
+
   // Google Calendar state
   const [gcalConnected, setGcalConnected] = useState(false);
   const [gcalEmail, setGcalEmail] = useState('');
@@ -114,8 +170,20 @@ export function SettingsView({ data, onChange }: Props) {
           placeholder="Ваше имя или название"
         />
         <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
-          Будет показано клиентам в ссылке
+          Будет показано в тексте при отправке клиентам
         </div>
+      </div>
+
+      {/* Theme */}
+      <div class="settings-section" style="display:flex;align-items:center;justify-content:space-between;">
+        <h3 style="margin:0;">Тёмная тема</h3>
+        <button
+          class={`btn btn-sm ${theme === 'dark' ? 'btn-primary' : 'btn-outline'}`}
+          onClick={toggleTheme}
+          style="min-width:80px;"
+        >
+          {theme === 'dark' ? '🌙 Вкл' : '☀️ Выкл'}
+        </button>
       </div>
 
       {/* Working hours */}
@@ -247,6 +315,26 @@ export function SettingsView({ data, onChange }: Props) {
             </button>
           </>
         )}
+      </div>
+
+      {/* Data */}
+      <div class="settings-section">
+        <h3>Данные</h3>
+        <button class="btn btn-outline btn-block btn-sm" onClick={handleExport}>
+          📥 Экспортировать JSON
+        </button>
+        <div style="margin-top:8px;">
+          <label class="btn btn-outline btn-block btn-sm" style="cursor:pointer;">
+            📤 Импортировать JSON
+            <input type="file" accept=".json" style="display:none;" onChange={handleImport} />
+          </label>
+        </div>
+        <div style="margin-top:8px;">
+          <button class="btn btn-danger btn-block btn-sm" onClick={handleReset}
+            style={resetConfirm ? undefined : { background: 'var(--danger)', color: 'white' }}>
+            {resetConfirm ? '🔄 Точно сбросить?' : '🗑️ Сбросить все данные'}
+          </button>
+        </div>
       </div>
 
       {/* About */}

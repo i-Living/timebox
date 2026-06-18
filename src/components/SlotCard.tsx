@@ -5,9 +5,10 @@ import { getBookedCount } from '../store';
 interface Props {
   slot: Slot;
   onClick: () => void;
+  onCopy?: () => void;
 }
 
-export function SlotCard({ slot, onClick }: Props) {
+export function SlotCard({ slot, onClick, onCopy }: Props) {
   const booked = getBookedCount(slot);
   const remaining = slot.capacity - booked;
   const isFull = remaining <= 0;
@@ -44,7 +45,13 @@ export function SlotCard({ slot, onClick }: Props) {
           </div>
         )}
       </div>
-      <div class="slot-arrow">›</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        {onCopy && slot.status !== 'cancelled' && (
+          <button class="slot-card-btn" onClick={e => { e.stopPropagation(); onCopy(); }}
+            title="Копировать на завтра">📋</button>
+        )}
+        <div class="slot-arrow">›</div>
+      </div>
     </div>
   );
 }
