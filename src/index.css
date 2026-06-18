@@ -347,7 +347,7 @@ body {
 .form-input::placeholder, .form-select::placeholder { color: var(--text-secondary); opacity: 0.5; }
 
 .form-row { display: flex; gap: 8px; flex-wrap: wrap; overflow: hidden; }
-.form-row > * { flex: 1; min-width: 140px; }
+.form-row > * { flex: 1; min-width: 0; }
 
 .btn {
   padding: 12px 20px;
