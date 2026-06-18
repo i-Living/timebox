@@ -15,13 +15,6 @@ export function WeekStrip({ weekStart, selectedDate, slotsByDate, onSelectDate, 
   const days = getWeekDays(weekStart);
   const touchX = useRef(0);
 
-  const months = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
-  const startM = parseInt(weekStart.split('-')[1]) - 1;
-  const endM = parseInt(days[6].split('-')[1]) - 1;
-  const label = startM === endM
-    ? `${months[startM]} ${weekStart.split('-')[0]}`
-    : `${months[startM]} – ${months[endM]} ${days[6].split('-')[0]}`;
-
   const handleTouchStart = (e: TouchEvent) => {
     touchX.current = e.touches[0].clientX;
   };
