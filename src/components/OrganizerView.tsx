@@ -4,7 +4,7 @@ import { useState, useEffect } from 'preact/hooks';
 import type { Slot } from '../types';
 import { load, save, expandSlots, addSlot, updateSlot, deleteSlot } from '../store';
 import { today, getWeekStart, addDays, formatDateFull } from '../utils/dates';
-import { createCalendarEvent, updateCalendarEvent, slotToEvent, getStoredToken } from '../utils/gcal';
+import { createCalendarEvent, updateCalendarEvent, deleteCalendarEvent, slotToEvent, getStoredToken } from '../utils/gcal';
 import { WeekStrip } from './WeekStrip';
 import { Button } from './Button';
 import { SlotCard } from './SlotCard';
@@ -82,10 +82,16 @@ export function OrganizerView() {
 
     try {
       if (savedSlot.gcalEventId) {
-        await updateCalendarEvent(gcalClientId, savedSlot.gcalEventId, gcalEvent);
+        try {
+          await updateCalendarEvent(gcalClientId, savedSlot.gcalEventId, gcalEvent);
+        } catch {
+          // Event may have been deleted (e.g. undo restore) — create a new one
+          const eventId = await createCalendarEvent(gcalClientId, gcalEvent);
+          const updatedSlot = { ...savedSlot, gcalEventId: eventId };
+          setData(d => ({ ...d, slots: updateSlot(d.slots, updatedSlot) }));
+        }
       } else {
         const eventId = await createCalendarEvent(gcalClientId, gcalEvent);
-        // Save event ID back to the slot
         const updatedSlot = { ...savedSlot, gcalEventId: eventId };
         setData(d => ({ ...d, slots: updateSlot(d.slots, updatedSlot) }));
       }
@@ -104,6 +110,17 @@ export function OrganizerView() {
       setUndoSlot(null);
       setToast(t => t === 'Окно удалено' ? '' : t);
     }, 4000);
+
+    // Delete Google Calendar event (fire-and-forget)
+    if (slot.gcalEventId) {
+      const gcalClientId = localStorage.getItem('timebox_gcal_client_id') || import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+      const token = getStoredToken();
+      if (gcalClientId && token) {
+        deleteCalendarEvent(gcalClientId, slot.gcalEventId).catch(e =>
+          console.error('GCal delete error:', e),
+        );
+      }
+    }
   };
 
   const handleUndoDelete = () => {
@@ -120,6 +137,7 @@ export function OrganizerView() {
       id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       date: tomorrow,
       bookings: [],
+      gcalEventId: undefined,
     };
     setData(d => ({ ...d, slots: addSlot(d.slots, newSlot) }));
     showToast('Окно скопировано на ' + formatDateFull(tomorrow));

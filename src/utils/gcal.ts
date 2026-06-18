@@ -265,6 +265,23 @@ export async function updateCalendarEvent(
   }
 }
 
+export async function deleteCalendarEvent(
+  clientId: string,
+  eventId: string,
+): Promise<void> {
+  const accessToken = await getAccessToken(clientId);
+  const url = CALENDAR_API + '/calendars/primary/events/' + encodeURIComponent(eventId);
+  const resp = await fetch(url, {
+    method: 'DELETE',
+    headers: { Authorization: 'Bearer ' + accessToken },
+  });
+
+  if (!resp.ok && resp.status !== 404) {
+    const err = await resp.text();
+    throw new Error('Failed to delete event: ' + err);
+  }
+}
+
 export async function getFreeBusy(
   clientId: string,
   timeMin: string,
