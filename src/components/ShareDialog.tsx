@@ -3,14 +3,14 @@ import { useState } from 'preact/hooks';
 import type { Slot } from '../types';
 import { getFreeSlots } from '../store';
 import { today, addDays, formatDateFull } from '../utils/dates';
+import { pluralize } from '../utils/pluralize';
 
 interface Props {
-  organizerName: string;
   slots: Slot[];
   onClose: () => void;
 }
 
-export function ShareDialog({ organizerName, slots, onClose }: Props) {
+export function ShareDialog({ slots, onClose }: Props) {
   const [fromDate, setFromDate] = useState(today());
   const [toDate, setToDate] = useState(addDays(today(), 7));
   const [shareText, setShareText] = useState('');
@@ -20,12 +20,8 @@ export function ShareDialog({ organizerName, slots, onClose }: Props) {
 
   const generateText = () => {
     const lines: string[] = [];
-    lines.push('📅 Свободные окна — TimeBox');
+    lines.push('📅 Свободные окна:');
     lines.push('');
-    if (organizerName) {
-      lines.push('Организатор: ' + organizerName);
-      lines.push('');
-    }
 
     // Group free slots by date
     const byDate: Record<string, typeof freeSlots> = {};
@@ -41,7 +37,7 @@ export function ShareDialog({ organizerName, slots, onClose }: Props) {
         const remaining = s.bookings.filter(b => b.status === 'confirmed').length;
         const free = s.capacity - remaining;
         if (s.capacity > 1) {
-          lines.push('  ' + s.start + '–' + s.end + ' — ' + free + ' мест');
+          lines.push('  ' + s.start + '–' + s.end + ' — ' + free + ' ' + pluralize(free, 'место', 'места', 'мест'));
         } else {
           lines.push('  ' + s.start + '–' + s.end);
         }
@@ -51,10 +47,7 @@ export function ShareDialog({ organizerName, slots, onClose }: Props) {
 
     if (sortedDates.length === 0) {
       lines.push('Нет свободных окон.');
-      lines.push('');
     }
-
-    lines.push('Напишите мне, чтобы записаться!');
     setShareText(lines.join('\n'));
   };
 
@@ -62,6 +55,14 @@ export function ShareDialog({ organizerName, slots, onClose }: Props) {
     await navigator.clipboard.writeText(shareText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      await navigator.share({ text: shareText });
+    } else {
+      copyText();
+    }
   };
 
   return (
@@ -91,7 +92,7 @@ export function ShareDialog({ organizerName, slots, onClose }: Props) {
                 {freeSlots.map(s => (
                   <div key={s.id} style="font-size:13px;padding:6px 8px;background:var(--bg);border-radius:6px;">
                     {formatDateFull(s.date)} {s.start}–{s.end}
-                    {s.capacity > 1 && <span style="color:var(--text-secondary);"> ({s.capacity - s.bookings.filter(b=>b.status==='confirmed').length} мест)</span>}
+                    {s.capacity > 1 && <span style="color:var(--text-secondary);"> ({s.capacity - s.bookings.filter(b=>b.status==='confirmed').length} {pluralize(s.capacity - s.bookings.filter(b=>b.status==='confirmed').length, 'место', 'места', 'мест')})</span>}
                   </div>
                 ))}
               </div>
@@ -118,9 +119,16 @@ export function ShareDialog({ organizerName, slots, onClose }: Props) {
                 onClick={e => (e.target as HTMLTextAreaElement).select()}
               />
             </div>
-            <button class="btn btn-primary btn-block" onClick={copyText}>
-              {copied ? '✓ Скопировано!' : '📋 Копировать текст'}
-            </button>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-primary btn-block" onClick={copyText} style="flex:1;">
+                {copied ? '✓ Скопировано!' : 'Копировать текст'}
+              </button>
+              {typeof navigator.share !== 'undefined' && (
+                <button class="btn btn-outline" onClick={handleShare} style="flex-shrink:0;padding:12px 16px;">
+                  📤 Поделиться
+                </button>
+              )}
+            </div>
             <button class="btn btn-ghost btn-block" onClick={() => setShareText('')}>
               ↻ Сгенерировать заново
             </button>

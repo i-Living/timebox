@@ -182,7 +182,6 @@ export function OrganizerView() {
 
       {showShare && (
         <ShareDialog
-          organizerName={data.organizerName}
           slots={data.slots}
           onClose={() => setShowShare(false)}
         />
