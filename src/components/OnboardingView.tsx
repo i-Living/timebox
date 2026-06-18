@@ -1,4 +1,5 @@
 import { Clock, Calendar, ClipboardList, Pen } from 'lucide-react';
+import { Button } from './Button';
 
 interface Props {
   onDone: () => void;
@@ -37,9 +38,9 @@ export function OnboardingView({ onDone }: Props) {
         </div>
       </div>
 
-      <button class="btn btn-primary" style="margin-top:32px;padding:14px 48px;font-size:17px;" onClick={onDone}>
+      <Button style="margin-top:32px;padding:14px 48px;font-size:17px;" onClick={onDone}>
         Начать
-      </button>
+      </Button>
 
       <div style="margin-top:24px;font-size:12px;color:var(--text-secondary);">
         Данные хранятся только в этом браузере

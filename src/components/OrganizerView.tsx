@@ -1,10 +1,11 @@
 
-import { ExternalLink, Calendar } from 'lucide-react';
+import { ExternalLink, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'preact/hooks';
 import type { Slot } from '../types';
 import { load, save, expandSlots, addSlot, updateSlot, deleteSlot } from '../store';
 import { today, getWeekStart, addDays, formatDateFull } from '../utils/dates';
 import { WeekStrip } from './WeekStrip';
+import { Button } from './Button';
 import { SlotCard } from './SlotCard';
 import { SlotEditor } from './SlotEditor';
 import { ShareDialog } from './ShareDialog';
@@ -86,7 +87,7 @@ export function OrganizerView() {
     const tomorrow = addDays(slot.date, 1);
     const newSlot: Slot = {
       ...slot,
-      id: '',
+      id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
       date: tomorrow,
       bookings: [],
     };
@@ -116,18 +117,22 @@ export function OrganizerView() {
       {/* HEADER */}
       <div class="header">
         <div class="header-title">TimeBox</div>
-        <div style="display:flex;gap:8px;">
-          <button class="header-btn" onClick={() => { setEditingSlot(undefined); setShowEditor(true); }}>
-            ＋ Окно
-          </button>
-          <button class="header-btn" onClick={() => setShowShare(true)} disabled={!hasSlots}>
-            <ExternalLink size={16} style="vertical-align:middle;margin-right:4px;" /> Поделиться
-          </button>
-        </div>
       </div>
 
       {tab === 'calendar' && (
-        <>
+        <div class="tab-content" key="calendar">
+          {/* Week navigation — above the day strip */}
+          <div class="week-nav">
+            <Button variant="ghost" size="sm" onClick={handlePrevWeek} title="Предыдущая неделя">
+              <ChevronLeft size={20} />
+            </Button>
+            <Button variant="outline" size="sm" onClick={goToday} style="font-weight:600;">
+              Сегодня
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleNextWeek} title="Следующая неделя">
+              <ChevronRight size={20} />
+            </Button>
+          </div>
           <WeekStrip
             weekStart={weekStart}
             selectedDate={selectedDate}
@@ -136,13 +141,6 @@ export function OrganizerView() {
             onPrevWeek={handlePrevWeek}
             onNextWeek={handleNextWeek}
           />
-
-          <div class="week-nav">
-            <button onClick={handlePrevWeek}>← Пред.</button>
-            <button onClick={goToday} style="font-weight:600;">Сегодня</button>
-            <button onClick={handleNextWeek}>След. →</button>
-          </div>
-
           <div style="padding:10px 16px 0;font-size:14px;font-weight:600;color:var(--text-secondary);">
             {formatDateFull(selectedDate)}
           </div>
@@ -151,11 +149,7 @@ export function OrganizerView() {
             {daySlots.length === 0 ? (
               <div class="empty-state">
                 <div class="icon"><Calendar size={48} /></div>
-                Нет окон на этот день<br />
-                <button class="btn btn-primary btn-sm" style="margin-top:12px;"
-                  onClick={() => { setEditingSlot(undefined); setShowEditor(true); }}>
-                  ＋ Создать окно
-                </button>
+                Нет окон на этот день
               </div>
             ) : (
               daySlots.map(slot => (
@@ -166,14 +160,31 @@ export function OrganizerView() {
               ))
             )}
           </div>
-        </>
+
+          {/* Bottom actions for calendar tab */}
+          <div style="
+            position: fixed; bottom: 64px; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 480px;
+            background: var(--surface); border-top: 1px solid var(--border);
+            padding: 10px 16px; display: flex; gap: 10px;
+            z-index: 49;
+            align-items: center;
+          ">
+            <Button variant="primary" onClick={() => { setEditingSlot(undefined); setShowEditor(true); }} style="flex:1;">
+              ＋ Окно
+            </Button>
+            <Button variant="outline" onClick={() => setShowShare(true)} disabled={!hasSlots} style="flex:1;">
+              <ExternalLink size={16} style="vertical-align:middle;margin-right:4px;" /> Поделиться
+            </Button>
+          </div>
+        </div>
       )}
 
-      {tab === 'diary' && <DiaryView slots={data.slots} onChange={setData} />}
+      {tab === 'diary' && <div class="tab-content" key="diary"><DiaryView slots={data.slots} onChange={setData} /></div>}
 
-      {tab === 'clients' && <ClientsView slots={data.slots} onChange={setData} />}
+      {tab === 'clients' && <div class="tab-content" key="clients"><ClientsView slots={data.slots} onChange={setData} /></div>}
 
-      {tab === 'settings' && <SettingsView data={data} onChange={setData} />}
+      {tab === 'settings' && <div class="tab-content" key="settings"><SettingsView data={data} onChange={setData} /></div>}
 
       <BottomNav active={tab} onSelect={setTab} />
 

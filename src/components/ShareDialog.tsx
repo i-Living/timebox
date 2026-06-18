@@ -1,6 +1,7 @@
 
 import { useState } from 'preact/hooks';
 import { Clipboard, Share2, RefreshCw } from 'lucide-react';
+import { Button } from './Button';
 import type { Slot } from '../types';
 import { getFreeSlots } from '../store';
 import { today, addDays, formatDateFull } from '../utils/dates';
@@ -105,9 +106,9 @@ export function ShareDialog({ slots, onClose }: Props) {
               </div>
             )}
 
-            <button class="btn btn-primary btn-block" onClick={generateText} disabled={freeSlots.length === 0}>
+            <Button block onClick={generateText} disabled={freeSlots.length === 0}>
               <Clipboard size={16} style="vertical-align:middle;margin-right:4px;" /> Сгенерировать текст
-            </button>
+            </Button>
           </>
         )}
 
@@ -121,22 +122,22 @@ export function ShareDialog({ slots, onClose }: Props) {
               />
             </div>
             <div style="display:flex;gap:8px;">
-              <button class="btn btn-primary btn-block" onClick={copyText} style="flex:1;">
+              <Button block onClick={copyText} style="flex:1;">
                 {copied ? '✓ Скопировано!' : 'Копировать текст'}
-              </button>
+              </Button>
               {typeof navigator.share !== 'undefined' && (
-                <button class="btn btn-outline" onClick={handleShare} style="flex-shrink:0;padding:12px 16px;">
+                <Button variant="outline" onClick={handleShare} style="flex-shrink:0;padding:12px 16px;">
                   <Share2 size={16} style="vertical-align:middle;margin-right:4px;" /> Поделиться
-                </button>
+                </Button>
               )}
             </div>
-            <button class="btn btn-ghost btn-block" onClick={() => setShareText('')}>
+            <Button variant="ghost" block onClick={() => setShareText('')}>
               <RefreshCw size={16} style="vertical-align:middle;margin-right:4px;" /> Сгенерировать заново
-            </button>
+            </Button>
           </>
         )}
 
-        <button class="btn btn-ghost" onClick={onClose} style="margin-top:8px;">Закрыть</button>
+        <Button variant="ghost" onClick={onClose} style="margin-top:8px;">Закрыть</Button>
       </div>
     </div>
   );

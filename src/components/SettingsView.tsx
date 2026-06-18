@@ -1,6 +1,7 @@
-import type { OrganizerData } from '../types';
 import { useState, useEffect } from 'preact/hooks';
 import { Moon, Sun, Check, Download, Upload, RefreshCw, Trash2, Link } from 'lucide-react';
+import { Button } from './Button';
+import type { OrganizerData } from '../types';
 import { getStoredToken, clearToken, connectGoogleCalendar } from '../utils/gcal';
 
 interface Props {
@@ -35,23 +36,19 @@ export function SettingsView({ data, onChange }: Props) {
   const faqItems = [
     {
       q: 'Что такое TimeBox?',
-      a: 'TimeBox — это мобильное приложение для записи на свободные временные слоты. Организатор создаёт слоты и делится ссылкой, клиенты бронируют время без регистрации.',
+      a: 'TimeBox — это мобильное приложение для управления расписанием и записи клиентов. Все данные хранятся в вашем браузере, сервер не нужен.',
     },
     {
       q: 'Как поделиться свободным временем?',
-      a: 'Создайте слоты в разделе «Календарь», нажмите «Поделиться» и отправьте сгенерированную ссылку клиентам. В ссылке зашиты все свободные слоты — сервер не нужен.',
+      a: 'Создайте слоты в разделе «Календарь», нажмите «Поделиться» и отправьте сгенерированный текст клиентам. В тексте перечислены все свободные окна.',
     },
     {
-      q: 'Как клиент бронирует время?',
-      a: 'Клиент переходит по ссылке, видит список доступных слотов, выбирает подходящий, вводит имя и нажимает «Забронировать». Организатор получит уведомление.',
-    },
-    {
-      q: 'Что происходит после бронирования?',
-      a: 'Организатор видит запрос в разделе «Записи» и может подтвердить или отклонить. При подтверждении слот помечается занятым, а если подключен Google Календарь — создаётся событие.',
+      q: 'Как записать клиента?',
+      a: 'Получив ответ от клиента, откройте нужный слот, нажмите «Добавить клиента» и введите его имя. Можно также заранее вносить клиентов из списка.',
     },
     {
       q: 'Где хранятся мои данные?',
-      a: 'Все слоты, записи и настройки хранятся только в вашем браузере (localStorage). Никакие данные не отправляются на сервер. Вы полностью контролируете свою информацию.',
+      a: 'Все слоты, записи и настройки хранятся только в вашем браузере (localStorage). Никакие данные не отправляются на сервер.',
     },
     {
       q: 'Работает ли без интернета?',
@@ -59,7 +56,7 @@ export function SettingsView({ data, onChange }: Props) {
     },
     {
       q: 'Как подключить Google Календарь?',
-      a: 'В настройках нажмите «Подключить Google Календарь» и разрешите доступ. После этого подтверждённые брони будут автоматически создавать события в вашем календаре. Это безопасно: приложение не хранит ваш пароль.',
+      a: 'В настройках нажмите «Подключить Google Календарь» и разрешите доступ. После этого занятия с отметкой «Присутствовал» будут создавать события в вашем календаре.',
     },
   ];
 
@@ -178,13 +175,14 @@ export function SettingsView({ data, onChange }: Props) {
       {/* Theme */}
       <div class="settings-section" style="display:flex;align-items:center;justify-content:space-between;">
         <h3 style="margin:0;">Тёмная тема</h3>
-        <button
-          class={`btn btn-sm ${theme === 'dark' ? 'btn-primary' : 'btn-outline'}`}
+        <Button
+          variant={theme === 'dark' ? 'primary' : 'outline'}
+          size="sm"
           onClick={toggleTheme}
           style="min-width:80px;"
         >
           {theme === 'dark' ? <><Moon size={16} style="vertical-align:middle;margin-right:4px;" /> Вкл</> : <><Sun size={16} style="vertical-align:middle;margin-right:4px;" /> Выкл</>}
-        </button>
+        </Button>
       </div>
 
       {/* Working hours */}
@@ -219,14 +217,15 @@ export function SettingsView({ data, onChange }: Props) {
           {DAY_LABELS.map((label, i) => {
             const active = data.workingDays.includes(i);
             return (
-              <button
+            <Button
                 key={i}
-                class={`btn btn-sm ${active ? 'btn-primary' : 'btn-outline'}`}
+                variant={active ? 'primary' : 'outline'}
+                size="sm"
                 onClick={() => toggleDay(i)}
                 style="min-width:0;padding:6px 8px;"
               >
                 {label}
-              </button>
+              </Button>
             );
           })}
         </div>
@@ -237,14 +236,15 @@ export function SettingsView({ data, onChange }: Props) {
         <h3>Длительность по умолчанию</h3>
         <div style="display:flex;gap:4px;flex-wrap:wrap;">
           {DURATION_PRESETS.map(dur => (
-            <button
+            <Button
               key={dur}
-              class={`btn btn-sm ${data.defaultSlotDuration === dur ? 'btn-primary' : 'btn-outline'}`}
+              variant={data.defaultSlotDuration === dur ? 'primary' : 'outline'}
+              size="sm"
               onClick={() => update({ defaultSlotDuration: dur })}
               style="min-width:44px;"
             >
               {dur} мин
-            </button>
+            </Button>
           ))}
         </div>
         <div class="form-row" style="margin-top:8px;">
@@ -268,13 +268,15 @@ export function SettingsView({ data, onChange }: Props) {
         <h3>Часто задаваемые вопросы</h3>
         {faqItems.map((item, i) => (
           <div key={i} style="border-bottom:1px solid var(--border);padding:0;">
-            <button
-              class="btn btn-outline btn-block btn-sm"
+            <Button
+              variant="outline"
+              size="sm"
+              block
               style="text-align:left;font-weight:500;border:none;border-radius:0;padding:10px 0;"
               onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
             >
               {openFaq === i ? '▾' : '▸'} {item.q}
-            </button>
+            </Button>
             {openFaq === i && (
               <div style="font-size:13px;color:var(--text-secondary);padding:0 0 10px 20px;line-height:1.5;">
                 {item.a}
@@ -296,9 +298,9 @@ export function SettingsView({ data, onChange }: Props) {
             {gcalError && (
               <div style="font-size:13px;color:var(--danger);margin-bottom:8px;">{gcalError}</div>
             )}
-            <button class="btn btn-primary btn-block" onClick={handleConnect} disabled={gcalLoading}>
+            <Button block onClick={handleConnect} disabled={gcalLoading}>
               {gcalLoading ? 'Подключение...' : <><Link size={16} style="vertical-align:middle;margin-right:4px;" /> Подключить Google Календарь</>}
-            </button>
+            </Button>
           </>
         )}
 
@@ -311,9 +313,9 @@ export function SettingsView({ data, onChange }: Props) {
             <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">
               События создаются автоматически при подтверждении брони
             </div>
-            <button class="btn btn-outline btn-block btn-sm" onClick={handleDisconnect}>
+            <Button variant="outline" size="sm" block onClick={handleDisconnect}>
               Отключить
-            </button>
+            </Button>
           </>
         )}
       </div>
@@ -321,9 +323,9 @@ export function SettingsView({ data, onChange }: Props) {
       {/* Data */}
       <div class="settings-section">
         <h3>Данные</h3>
-        <button class="btn btn-outline btn-block btn-sm" onClick={handleExport}>
+        <Button variant="outline" size="sm" block onClick={handleExport}>
           <Download size={16} style="vertical-align:middle;margin-right:4px;" /> Экспортировать JSON
-        </button>
+        </Button>
         <div style="margin-top:8px;">
           <label class="btn btn-outline btn-block btn-sm" style="cursor:pointer;">
             <Upload size={16} style="vertical-align:middle;margin-right:4px;" /> Импортировать JSON
@@ -331,10 +333,10 @@ export function SettingsView({ data, onChange }: Props) {
           </label>
         </div>
         <div style="margin-top:8px;">
-          <button class="btn btn-danger btn-block btn-sm" onClick={handleReset}
-            style={resetConfirm ? undefined : { background: 'var(--danger)', color: 'white' }}>
+          <Button variant="danger" size="sm" block onClick={handleReset}
+            style={resetConfirm ? { background: 'var(--danger)', color: 'white' } : undefined}>
             {resetConfirm ? <><RefreshCw size={16} style="vertical-align:middle;margin-right:4px;" /> Точно сбросить?</> : <><Trash2 size={16} style="vertical-align:middle;margin-right:4px;" /> Сбросить все данные</>}
-          </button>
+          </Button>
         </div>
       </div>
 

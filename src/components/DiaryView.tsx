@@ -1,6 +1,7 @@
 
 import { useState } from 'preact/hooks';
 import { BookOpen, Check, Clock, X, Pencil, Plus } from 'lucide-react';
+import { Button } from './Button';
 import type { Slot, OrganizerData } from '../types';
 import { formatDateFull } from '../utils/dates';
 
@@ -69,21 +70,24 @@ export function DiaryView({ slots, onChange }: Props) {
                 <div key={b.name} class="students" style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
                   <span style="flex:1;">{b.name}{b.contact ? ' (' + b.contact + ')' : ''}</span>
                   <div style="display:flex;gap:2px;">
-                    <button
-                      class={`btn btn-sm ${b.attendance === 'present' ? 'btn-primary' : 'btn-outline'}`}
+                    <Button
+                      variant={b.attendance === 'present' ? 'primary' : 'outline'}
+                      size="sm"
                       style="padding:2px 6px;font-size:12px;min-width:0;"
                       onClick={() => setAttendance(slot.id, bi, 'present')}
-                      title="Присутствовал"><Check size={16} /></button>
-                    <button
-                      class={`btn btn-sm ${b.attendance === 'late' ? 'btn-primary' : 'btn-outline'}`}
+                      title="Присутствовал"><Check size={16} /></Button>
+                    <Button
+                      variant={b.attendance === 'late' ? 'primary' : 'outline'}
+                      size="sm"
                       style="padding:2px 6px;font-size:12px;min-width:0;"
                       onClick={() => setAttendance(slot.id, bi, 'late')}
-                      title="Опоздал"><Clock size={16} /></button>
-                    <button
-                      class={`btn btn-sm ${b.attendance === 'no-show' ? 'btn-primary' : 'btn-outline'}`}
+                      title="Опоздал"><Clock size={16} /></Button>
+                    <Button
+                      variant={b.attendance === 'no-show' ? 'primary' : 'outline'}
+                      size="sm"
                       style="padding:2px 6px;font-size:12px;min-width:0;"
                       onClick={() => setAttendance(slot.id, bi, 'no-show')}
-                      title="Не пришёл"><X size={16} /></button>
+                      title="Не пришёл"><X size={16} /></Button>
                   </div>
                 </div>
               ))}
@@ -97,8 +101,8 @@ export function DiaryView({ slots, onChange }: Props) {
                     style="font-size:13px;"
                   />
                   <div style="display:flex;gap:6px;margin-top:4px;">
-                    <button class="btn btn-primary btn-sm" onClick={() => saveNotes(slot.id)}>Сохранить</button>
-                    <button class="btn btn-ghost btn-sm" onClick={() => setEditingNotes(null)}>Отмена</button>
+                    <Button size="sm" onClick={() => saveNotes(slot.id)}>Сохранить</Button>
+                    <Button variant="ghost" size="sm" onClick={() => setEditingNotes(null)}>Отмена</Button>
                   </div>
                 </div>
               ) : (
@@ -108,11 +112,11 @@ export function DiaryView({ slots, onChange }: Props) {
                       {slot.notes}
                     </div>
                   )}
-                  <button class="btn btn-ghost btn-sm" style="font-size:12px;color:var(--text-secondary);padding:2px 0;"
+                  <Button variant="ghost" size="sm" style="font-size:12px;color:var(--text-secondary);padding:2px 0;"
                     onClick={() => { setEditingNotes(slot.id); setNotesText(slot.notes || ''); }}>
                     {slot.notes ? <><Pencil size={14} style="vertical-align:middle;margin-right:2px;" /></> : <><Plus size={14} style="vertical-align:middle;margin-right:2px;" /></>}
                     {slot.notes ? 'Изменить' : 'Добавить заметку'}
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>

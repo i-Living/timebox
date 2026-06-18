@@ -1,6 +1,7 @@
 
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { Check, X } from 'lucide-react';
+import { Button } from './Button';
 import type { Slot, Booking } from '../types';
 import { today } from '../utils/dates';
 
@@ -47,6 +48,15 @@ export function SlotEditor({ slot, defaultDuration, knownClients, onSave, onDele
         n => n.toLowerCase().includes(clientName.toLowerCase()) && clientName.length > 0
       )
     : [];
+
+  // Escape → close, Enter → add client when in add mode
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
 
   const handleSave = () => {
     onSave({
@@ -155,10 +165,10 @@ export function SlotEditor({ slot, defaultDuration, knownClients, onSave, onDele
             {bookings.filter(b => b.status === 'confirmed').map((b, i) => (
               <div key={i} style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--bg);border-radius:6px;margin-bottom:4px;font-size:13px;">
                 <span style="flex:1;">{b.name}{b.contact ? ' (' + b.contact + ')' : ''}</span>
-                <button class="btn btn-ghost btn-sm"
+                <Button variant="ghost" size="sm"
                   style="padding:2px 6px;font-size:14px;line-height:1;min-width:0;color:var(--text-secondary);"
                   onClick={() => setBookings(prev => prev.filter((_, j) => j !== i))}
-                  title="Убрать клиента"><X size={14} /></button>
+                  title="Убрать клиента"><X size={14} /></Button>
               </div>
             ))}
             {showAddClient ? (
@@ -168,6 +178,7 @@ export function SlotEditor({ slot, defaultDuration, knownClients, onSave, onDele
                     onInput={e => { setClientName(e.currentTarget.value); setShowSuggestions(true); }}
                     onFocus={() => filteredNames.length > 0 && setShowSuggestions(true)}
                     onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                    onKeyDown={e => { if (e.key === 'Enter' && clientName.trim()) handleAddClient(); }}
                     autoFocus />
                   {showSuggestions && filteredNames.length > 0 && (
                     <div style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px;z-index:10;max-height:150px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
@@ -184,30 +195,30 @@ export function SlotEditor({ slot, defaultDuration, knownClients, onSave, onDele
                 <input class="form-input" type="text" placeholder="Контакт (необязательно)" value={clientContact}
                   onInput={e => setClientContact(e.currentTarget.value)} />
                 <div style="display:flex;gap:8px;">
-                  <button class="btn btn-primary btn-sm" onClick={handleAddClient} disabled={!clientName.trim()}>
+                  <Button size="sm" onClick={handleAddClient} disabled={!clientName.trim()}>
                     <Check size={16} style="vertical-align:middle;margin-right:4px;" /> Добавить
-                  </button>
-                  <button class="btn btn-ghost btn-sm" onClick={() => { setShowAddClient(false); setClientName(''); setClientContact(''); }}>
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setShowAddClient(false); setClientName(''); setClientContact(''); }}>
                     Отмена
-                  </button>
+                  </Button>
                 </div>
               </div>
             ) : (
-              <button class="btn btn-outline btn-sm btn-block" onClick={() => setShowAddClient(true)} style="margin-top:4px;">
+              <Button variant="outline" size="sm" block onClick={() => setShowAddClient(true)} style="margin-top:4px;">
                 + Добавить клиента
-              </button>
+              </Button>
             )}
           </div>
         )}
 
         <div style="display:flex;gap:8px;margin-top:16px;">
-          <button class="btn btn-primary btn-block" onClick={handleSave}>
+          <Button block onClick={handleSave}>
             {slot ? 'Сохранить' : 'Создать окно'}
-          </button>
+          </Button>
           {slot && onDelete && (
-            <button class="btn btn-danger" onClick={handleDelete} style="flex-shrink:0;">Удалить</button>
+            <Button variant="danger" onClick={handleDelete} style="flex-shrink:0;">Удалить</Button>
           )}
-          <button class="btn btn-outline" onClick={onClose}>Отмена</button>
+          <Button variant="outline" onClick={onClose}>Отмена</Button>
         </div>
       </div>
     </div>
