@@ -1,6 +1,6 @@
 
 import { useState } from 'preact/hooks';
-import type { Slot } from '../types';
+import type { Slot, Booking } from '../types';
 import { today } from '../utils/dates';
 
 interface Props {
@@ -34,6 +34,9 @@ export function SlotEditor({ slot, defaultDuration, onSave, onDelete, onClose }:
   const [repeatFreq, setRepeatFreq] = useState<'daily' | 'weekly' | 'biweekly'>(slot?.repeat?.freq || 'weekly');
   const [repeatUntil, setRepeatUntil] = useState(slot?.repeat?.until || '');
   const [notes, setNotes] = useState(slot?.notes || '');
+  const [showAddClient, setShowAddClient] = useState(false);
+  const [clientName, setClientName] = useState('');
+  const [clientContact, setClientContact] = useState('');
 
   const handleSave = () => {
     onSave({
@@ -55,6 +58,23 @@ export function SlotEditor({ slot, defaultDuration, onSave, onDelete, onClose }:
       onDelete(slot.id);
       onClose();
     }
+  };
+
+  const handleAddClient = () => {
+    if (!slot || !clientName.trim()) return;
+    const newBooking: Booking = {
+      name: clientName.trim(),
+      contact: clientContact.trim(),
+      status: 'confirmed',
+      bookedAt: new Date().toISOString(),
+    };
+    onSave({
+      ...slot,
+      bookings: [...slot.bookings, newBooking],
+    });
+    setClientName('');
+    setClientContact('');
+    setShowAddClient(false);
   };
 
   return (
@@ -117,7 +137,43 @@ export function SlotEditor({ slot, defaultDuration, onSave, onDelete, onClose }:
             placeholder="Что планируется в это время" />
         </div>
 
-        <div style="display:flex;gap:8px;">
+        {slot && (
+          <div style="margin-top:12px;">
+            <h3 style="font-size:14px;font-weight:600;margin-bottom:6px;">Клиенты</h3>
+            {slot.bookings.filter(b => b.status === 'confirmed').length === 0 && (
+              <div style="font-size:13px;color:var(--text-secondary);margin-bottom:6px;">
+                Нет записанных клиентов
+              </div>
+            )}
+            {slot.bookings.filter(b => b.status === 'confirmed').map((b, i) => (
+              <div key={i} style="padding:6px 8px;background:var(--bg);border-radius:6px;margin-bottom:4px;font-size:13px;">
+                {b.name}{b.contact ? ' (' + b.contact + ')' : ''}
+              </div>
+            ))}
+            {showAddClient ? (
+              <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
+                <input class="form-input" type="text" placeholder="Имя клиента" value={clientName}
+                  onInput={e => setClientName(e.currentTarget.value)} autoFocus />
+                <input class="form-input" type="text" placeholder="Контакт (необязательно)" value={clientContact}
+                  onInput={e => setClientContact(e.currentTarget.value)} />
+                <div style="display:flex;gap:8px;">
+                  <button class="btn btn-primary btn-sm" onClick={handleAddClient} disabled={!clientName.trim()}>
+                    ✅ Добавить
+                  </button>
+                  <button class="btn btn-ghost btn-sm" onClick={() => { setShowAddClient(false); setClientName(''); setClientContact(''); }}>
+                    Отмена
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button class="btn btn-outline btn-sm btn-block" onClick={() => setShowAddClient(true)} style="margin-top:4px;">
+                + Добавить клиента
+              </button>
+            )}
+          </div>
+        )}
+
+        <div style="display:flex;gap:8px;margin-top:16px;">
           <button class="btn btn-primary btn-block" onClick={handleSave}>
             {slot ? 'Сохранить' : 'Создать окно'}
           </button>
