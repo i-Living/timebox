@@ -284,7 +284,7 @@ export function OrganizerView() {
 
           {/* Bottom actions for calendar tab */}
           <div style="
-            position: fixed; bottom: 64px; left: 50%; transform: translateX(-50%);
+            position: fixed; bottom: 76px; left: 50%; transform: translateX(-50%);
             width: 100%; max-width: 480px;
             background: var(--surface); border-top: 1px solid var(--border);
             padding: 10px 16px; display: flex; gap: 10px;

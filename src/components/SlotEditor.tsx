@@ -117,11 +117,11 @@ export function SlotEditor({ slot, defaultDuration, knownClients, onSave, onDele
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Начало</label>
-            <input class="form-input" type="time" value={start} onInput={e => setStart(e.currentTarget.value)} />
+            <input class="form-input" type="time" value={start} onInput={e => setStart(e.currentTarget.value)} style="min-width:0;" />
           </div>
           <div class="form-group">
             <label class="form-label">Конец</label>
-            <input class="form-input" type="time" value={end} onInput={e => setEnd(e.currentTarget.value)} />
+            <input class="form-input" type="time" value={end} onInput={e => setEnd(e.currentTarget.value)} style="min-width:0;" />
           </div>
         </div>
 
