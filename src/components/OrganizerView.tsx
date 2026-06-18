@@ -1,4 +1,5 @@
 
+import { ExternalLink, Calendar } from 'lucide-react';
 import { useState, useEffect } from 'preact/hooks';
 import type { Slot } from '../types';
 import { load, save, expandSlots, addSlot, updateSlot, deleteSlot } from '../store';
@@ -120,7 +121,7 @@ export function OrganizerView() {
             ＋ Окно
           </button>
           <button class="header-btn" onClick={() => setShowShare(true)} disabled={!hasSlots}>
-            ↗️ Поделиться
+            <ExternalLink size={16} style="vertical-align:middle;margin-right:4px;" /> Поделиться
           </button>
         </div>
       </div>
@@ -149,7 +150,7 @@ export function OrganizerView() {
           <div class="slot-list">
             {daySlots.length === 0 ? (
               <div class="empty-state">
-                <div class="icon">📅</div>
+                <div class="icon"><Calendar size={48} /></div>
                 Нет окон на этот день<br />
                 <button class="btn btn-primary btn-sm" style="margin-top:12px;"
                   onClick={() => { setEditingSlot(undefined); setShowEditor(true); }}>

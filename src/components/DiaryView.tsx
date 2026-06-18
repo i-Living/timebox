@@ -1,5 +1,6 @@
 
 import { useState } from 'preact/hooks';
+import { BookOpen, Check, Clock, X, Pencil, Plus } from 'lucide-react';
 import type { Slot, OrganizerData } from '../types';
 import { formatDateFull } from '../utils/dates';
 
@@ -51,7 +52,7 @@ export function DiaryView({ slots, onChange }: Props) {
     <div class="slot-list">
       {allSlots.length === 0 ? (
         <div class="empty-state">
-          <div class="icon">📓</div>
+          <div class="icon"><BookOpen size={48} /></div>
           Здесь будет история занятий и заметки
         </div>
       ) : (
@@ -72,17 +73,17 @@ export function DiaryView({ slots, onChange }: Props) {
                       class={`btn btn-sm ${b.attendance === 'present' ? 'btn-primary' : 'btn-outline'}`}
                       style="padding:2px 6px;font-size:12px;min-width:0;"
                       onClick={() => setAttendance(slot.id, bi, 'present')}
-                      title="Присутствовал">✅</button>
+                      title="Присутствовал"><Check size={16} /></button>
                     <button
                       class={`btn btn-sm ${b.attendance === 'late' ? 'btn-primary' : 'btn-outline'}`}
                       style="padding:2px 6px;font-size:12px;min-width:0;"
                       onClick={() => setAttendance(slot.id, bi, 'late')}
-                      title="Опоздал">⏰</button>
+                      title="Опоздал"><Clock size={16} /></button>
                     <button
                       class={`btn btn-sm ${b.attendance === 'no-show' ? 'btn-primary' : 'btn-outline'}`}
                       style="padding:2px 6px;font-size:12px;min-width:0;"
                       onClick={() => setAttendance(slot.id, bi, 'no-show')}
-                      title="Не пришёл">❌</button>
+                      title="Не пришёл"><X size={16} /></button>
                   </div>
                 </div>
               ))}
@@ -109,7 +110,8 @@ export function DiaryView({ slots, onChange }: Props) {
                   )}
                   <button class="btn btn-ghost btn-sm" style="font-size:12px;color:var(--text-secondary);padding:2px 0;"
                     onClick={() => { setEditingNotes(slot.id); setNotesText(slot.notes || ''); }}>
-                    {slot.notes ? '✏️' : '➕ Добавить заметку'}
+                    {slot.notes ? <><Pencil size={14} style="vertical-align:middle;margin-right:2px;" /></> : <><Plus size={14} style="vertical-align:middle;margin-right:2px;" /></>}
+                    {slot.notes ? 'Изменить' : 'Добавить заметку'}
                   </button>
                 </div>
               )}

@@ -1,6 +1,7 @@
 
 import type { Slot } from '../types';
 import { getBookedCount } from '../store';
+import { Clipboard } from 'lucide-react';
 
 interface Props {
   slot: Slot;
@@ -48,7 +49,7 @@ export function SlotCard({ slot, onClick, onCopy }: Props) {
       <div style="display:flex;flex-direction:column;gap:4px;">
         {onCopy && slot.status !== 'cancelled' && (
           <button class="slot-card-btn" onClick={e => { e.stopPropagation(); onCopy(); }}
-            title="Копировать на завтра">📋</button>
+            title="Копировать на завтра"><Clipboard size={16} /></button>
         )}
         <div class="slot-arrow">›</div>
       </div>

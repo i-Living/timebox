@@ -1,5 +1,6 @@
 
 import { useState } from 'preact/hooks';
+import { Clipboard, Share2, RefreshCw } from 'lucide-react';
 import type { Slot } from '../types';
 import { getFreeSlots } from '../store';
 import { today, addDays, formatDateFull } from '../utils/dates';
@@ -105,7 +106,7 @@ export function ShareDialog({ slots, onClose }: Props) {
             )}
 
             <button class="btn btn-primary btn-block" onClick={generateText} disabled={freeSlots.length === 0}>
-              📋 Сгенерировать текст
+              <Clipboard size={16} style="vertical-align:middle;margin-right:4px;" /> Сгенерировать текст
             </button>
           </>
         )}
@@ -125,12 +126,12 @@ export function ShareDialog({ slots, onClose }: Props) {
               </button>
               {typeof navigator.share !== 'undefined' && (
                 <button class="btn btn-outline" onClick={handleShare} style="flex-shrink:0;padding:12px 16px;">
-                  📤 Поделиться
+                  <Share2 size={16} style="vertical-align:middle;margin-right:4px;" /> Поделиться
                 </button>
               )}
             </div>
             <button class="btn btn-ghost btn-block" onClick={() => setShareText('')}>
-              ↻ Сгенерировать заново
+              <RefreshCw size={16} style="vertical-align:middle;margin-right:4px;" /> Сгенерировать заново
             </button>
           </>
         )}

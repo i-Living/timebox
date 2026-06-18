@@ -1,5 +1,6 @@
 import type { OrganizerData } from '../types';
 import { useState, useEffect } from 'preact/hooks';
+import { Moon, Sun, Check, Download, Upload, RefreshCw, Trash2, Link } from 'lucide-react';
 import { getStoredToken, clearToken, connectGoogleCalendar } from '../utils/gcal';
 
 interface Props {
@@ -182,7 +183,7 @@ export function SettingsView({ data, onChange }: Props) {
           onClick={toggleTheme}
           style="min-width:80px;"
         >
-          {theme === 'dark' ? '🌙 Вкл' : '☀️ Выкл'}
+          {theme === 'dark' ? <><Moon size={16} style="vertical-align:middle;margin-right:4px;" /> Вкл</> : <><Sun size={16} style="vertical-align:middle;margin-right:4px;" /> Выкл</>}
         </button>
       </div>
 
@@ -296,7 +297,7 @@ export function SettingsView({ data, onChange }: Props) {
               <div style="font-size:13px;color:var(--danger);margin-bottom:8px;">{gcalError}</div>
             )}
             <button class="btn btn-primary btn-block" onClick={handleConnect} disabled={gcalLoading}>
-              {gcalLoading ? 'Подключение...' : '🔗 Подключить Google Календарь'}
+              {gcalLoading ? 'Подключение...' : <><Link size={16} style="vertical-align:middle;margin-right:4px;" /> Подключить Google Календарь</>}
             </button>
           </>
         )}
@@ -304,7 +305,7 @@ export function SettingsView({ data, onChange }: Props) {
         {gcalConnected && (
           <>
             <div style="display:flex;align-items:center;gap:8px;padding:8px 0;">
-              <span style="font-size:18px;">✅</span>
+              <Check size={18} style="color:var(--primary);" />
               <span style="font-size:14px;">{gcalEmail || 'Подключен'}</span>
             </div>
             <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">
@@ -321,18 +322,18 @@ export function SettingsView({ data, onChange }: Props) {
       <div class="settings-section">
         <h3>Данные</h3>
         <button class="btn btn-outline btn-block btn-sm" onClick={handleExport}>
-          📥 Экспортировать JSON
+          <Download size={16} style="vertical-align:middle;margin-right:4px;" /> Экспортировать JSON
         </button>
         <div style="margin-top:8px;">
           <label class="btn btn-outline btn-block btn-sm" style="cursor:pointer;">
-            📤 Импортировать JSON
+            <Upload size={16} style="vertical-align:middle;margin-right:4px;" /> Импортировать JSON
             <input type="file" accept=".json" style="display:none;" onChange={handleImport} />
           </label>
         </div>
         <div style="margin-top:8px;">
           <button class="btn btn-danger btn-block btn-sm" onClick={handleReset}
             style={resetConfirm ? undefined : { background: 'var(--danger)', color: 'white' }}>
-            {resetConfirm ? '🔄 Точно сбросить?' : '🗑️ Сбросить все данные'}
+            {resetConfirm ? <><RefreshCw size={16} style="vertical-align:middle;margin-right:4px;" /> Точно сбросить?</> : <><Trash2 size={16} style="vertical-align:middle;margin-right:4px;" /> Сбросить все данные</>}
           </button>
         </div>
       </div>

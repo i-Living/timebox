@@ -1,5 +1,6 @@
 
 import { useState } from 'preact/hooks';
+import { Check, X } from 'lucide-react';
 import type { Slot, Booking } from '../types';
 import { today } from '../utils/dates';
 
@@ -157,7 +158,7 @@ export function SlotEditor({ slot, defaultDuration, knownClients, onSave, onDele
                 <button class="btn btn-ghost btn-sm"
                   style="padding:2px 6px;font-size:14px;line-height:1;min-width:0;color:var(--text-secondary);"
                   onClick={() => setBookings(prev => prev.filter((_, j) => j !== i))}
-                  title="Убрать клиента">✕</button>
+                  title="Убрать клиента"><X size={14} /></button>
               </div>
             ))}
             {showAddClient ? (
@@ -184,7 +185,7 @@ export function SlotEditor({ slot, defaultDuration, knownClients, onSave, onDele
                   onInput={e => setClientContact(e.currentTarget.value)} />
                 <div style="display:flex;gap:8px;">
                   <button class="btn btn-primary btn-sm" onClick={handleAddClient} disabled={!clientName.trim()}>
-                    ✅ Добавить
+                    <Check size={16} style="vertical-align:middle;margin-right:4px;" /> Добавить
                   </button>
                   <button class="btn btn-ghost btn-sm" onClick={() => { setShowAddClient(false); setClientName(''); setClientContact(''); }}>
                     Отмена

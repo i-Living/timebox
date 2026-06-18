@@ -1,4 +1,5 @@
 
+import { Users, Check, Clock, X } from 'lucide-react';
 import type { Slot, OrganizerData } from '../types';
 
 interface Props {
@@ -78,7 +79,7 @@ export function ClientsView({ slots, onChange }: Props) {
 
       {sortedClients.length === 0 ? (
         <div class="empty-state">
-          <div class="icon">👥</div>
+          <div class="icon"><Users size={48} /></div>
           Пока нет клиентов<br />
           <span style="font-size:13px;">Добавьте клиента в слот, и он появится здесь</span>
         </div>
@@ -98,14 +99,16 @@ export function ClientsView({ slots, onChange }: Props) {
                     <button class="btn btn-ghost btn-sm"
                       style="padding:2px 6px;font-size:14px;line-height:1;min-width:0;color:var(--text-secondary);"
                       onClick={() => handleDeleteClient(client.name)}
-                      title="Удалить клиента">✕</button>
+                      title="Удалить клиента"><X size={14} /></button>
                   )}
                 </div>
               </div>
               <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">
                 {totalMarked > 0 && (
                   <span>
-                    ✅{client.attendance.present} ⏰{client.attendance.late} ❌{client.attendance.noShow}
+                    <Check size={12} style="vertical-align:middle;" />{client.attendance.present}{' '}
+                    <Clock size={12} style="vertical-align:middle;" />{client.attendance.late}{' '}
+                    <X size={12} style="vertical-align:middle;" />{client.attendance.noShow}
                     {' · '}
                   </span>
                 )}
