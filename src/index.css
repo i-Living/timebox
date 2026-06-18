@@ -221,9 +221,12 @@ body {
   display: inline-block;
   margin-bottom: 4px;
 }
-.slot-status.free { background: var(--success-light); color: #065f46; }
-.slot-status.booked { background: var(--primary-light); color: #3730a3; }
-.slot-status.pending { background: var(--warning-light); color: #92400e; }
+.slot-status.free { background: var(--success-light); color: var(--success); }
+.slot-status.booked { background: var(--primary-light); color: var(--primary); }
+.slot-status.pending { background: var(--warning-light); color: var(--warning); }
+[data-theme="dark"] .slot-status.free { color: #6ee7b7; }
+[data-theme="dark"] .slot-status.booked { color: #a5b4fc; }
+[data-theme="dark"] .slot-status.pending { color: #fde68a; }
 
 .slot-bookings {
   font-size: 13px;
@@ -244,6 +247,8 @@ body {
   transition: background 0.15s;
 }
 .slot-card-btn:hover { background: var(--bg); }
+[data-theme="dark"] .slot-card-btn { color: #9ca3af; }
+[data-theme="dark"] .slot-card-btn:hover { color: var(--text); background: var(--bg); }
 
 /* Tab content animation */
 .tab-content { animation: tab-fade-in 0.2s ease; }
@@ -461,8 +466,12 @@ body {
   margin-bottom: 4px;
 }
 .diary-entry .students {
-  font-size: 14px;
   margin-bottom: 6px;
+  font-size: 14px;
+}
+.diary-entry .students:last-child {
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
 }
 .diary-entry .notes {
   font-size: 14px;

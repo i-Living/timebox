@@ -67,7 +67,7 @@ export function DiaryView({ slots, onChange }: Props) {
               </div>
 
               {confirmed.map((b, bi) => (
-                <div key={b.name} class="students" style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                <div key={b.name} class="students" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border);">
                   <span style="flex:1;">{b.name}{b.contact ? ' (' + b.contact + ')' : ''}</span>
                   <div style="display:flex;gap:2px;">
                     <Button
