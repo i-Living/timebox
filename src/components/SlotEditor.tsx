@@ -49,6 +49,13 @@ export function SlotEditor({ slot, defaultDuration, knownClients, onSave, onDele
       )
     : [];
 
+  // Auto-adjust end when start changes: if end <= start, recalculate
+  useEffect(() => {
+    if (end <= start) {
+      setEnd(addMinutes(start, defaultDuration || 60));
+    }
+  }, [start, defaultDuration, end]);
+
   // Escape → close, Enter → add client when in add mode
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
