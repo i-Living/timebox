@@ -28,6 +28,14 @@ export function save(d: OrganizerData): void {
   localStorage.setItem(KEY, JSON.stringify(d));
 }
 
+// Check if a slot is a standalone override for a recurring slot
+function isRecurringOverride(slot: Slot, allSlots: Slot[]): boolean {
+  const match = slot.id.match(/^(.+)_(\d{4}-\d{2}-\d{2})$/);
+  if (!match) return false;
+  const baseId = match[1];
+  return allSlots.some(s => s.id === baseId && s.repeat !== undefined);
+}
+
 // Expand recurring slots into concrete instances for a date range
 export function expandSlots(slots: Slot[], from: string, to: string): Slot[] {
   const result: Slot[] = [];
@@ -35,8 +43,8 @@ export function expandSlots(slots: Slot[], from: string, to: string): Slot[] {
     if (s.status === 'cancelled') continue;
 
     if (!s.repeat) {
-      // Single slot – include if in range
-      if (s.date >= from && s.date <= to) result.push(s);
+      // Single slot – skip if it's a recurring override (handled below)
+      if (s.date >= from && s.date <= to && !isRecurringOverride(s, slots)) result.push(s);
     } else {
       // Expand recurring
       const start = new Date(s.date);

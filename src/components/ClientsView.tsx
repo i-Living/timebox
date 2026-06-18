@@ -1,8 +1,9 @@
 
-import type { Slot } from '../types';
+import type { Slot, OrganizerData } from '../types';
 
 interface Props {
   slots: Slot[];
+  onChange?: (data: OrganizerData) => void;
 }
 
 interface ClientSummary {
@@ -13,7 +14,7 @@ interface ClientSummary {
   attendance: { present: number; late: number; noShow: number };
 }
 
-export function ClientsView({ slots }: Props) {
+export function ClientsView({ slots, onChange }: Props) {
   const clients = new Map<string, ClientSummary>();
 
   for (const slot of slots) {
@@ -51,6 +52,16 @@ export function ClientsView({ slots }: Props) {
     return sum + s.bookings.filter(b => b.status === 'confirmed').length;
   }, 0);
 
+  const handleDeleteClient = (clientName: string) => {
+    if (!onChange || !window.confirm(`Удалить клиента «${clientName}» из всех окон?`)) return;
+    const data = JSON.parse(localStorage.getItem('timebox_data') || '{}');
+    const updated = data.slots.map((s: Slot) => ({
+      ...s,
+      bookings: s.bookings.filter(b => !(b.status === 'confirmed' && b.name === clientName)),
+    }));
+    onChange({ ...data, slots: updated });
+  };
+
   return (
     <div class="slot-list">
       {/* Stats */}
@@ -81,7 +92,15 @@ export function ClientsView({ slots }: Props) {
                   <strong>{client.name}</strong>
                   {client.contact && <span style="font-size:13px;color:var(--text-secondary);margin-left:8px;">{client.contact}</span>}
                 </div>
-                <span style="font-size:13px;font-weight:600;">{client.totalVisits}×</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="font-size:13px;font-weight:600;">{client.totalVisits}×</span>
+                  {onChange && (
+                    <button class="btn btn-ghost btn-sm"
+                      style="padding:2px 6px;font-size:14px;line-height:1;min-width:0;color:var(--text-secondary);"
+                      onClick={() => handleDeleteClient(client.name)}
+                      title="Удалить клиента">✕</button>
+                  )}
+                </div>
               </div>
               <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">
                 {totalMarked > 0 && (

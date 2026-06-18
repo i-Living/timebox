@@ -103,6 +103,13 @@ export function OrganizerView() {
 
   const hasSlots = data.slots.length > 0;
 
+  // All unique client names for autocomplete
+  const knownClients = Array.from(
+    new Set(
+      data.slots.flatMap(s => s.bookings.filter(b => b.status === 'confirmed').map(b => b.name))
+    )
+  ).sort();
+
   return (
     <>
       {/* HEADER */}
@@ -163,7 +170,7 @@ export function OrganizerView() {
 
       {tab === 'diary' && <DiaryView slots={data.slots} onChange={setData} />}
 
-      {tab === 'clients' && <ClientsView slots={data.slots} />}
+      {tab === 'clients' && <ClientsView slots={data.slots} onChange={setData} />}
 
       {tab === 'settings' && <SettingsView data={data} onChange={setData} />}
 
@@ -174,6 +181,7 @@ export function OrganizerView() {
         <SlotEditor
           slot={editingSlot}
           defaultDuration={data.defaultSlotDuration}
+          knownClients={knownClients}
           onSave={handleSaveSlot}
           onDelete={handleDeleteSlot}
           onClose={() => { setShowEditor(false); setEditingSlot(undefined); }}

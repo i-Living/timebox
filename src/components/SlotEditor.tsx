@@ -6,6 +6,7 @@ import { today } from '../utils/dates';
 interface Props {
   slot?: Slot; // undefined = creating new
   defaultDuration?: number;
+  knownClients?: string[]; // for name autocomplete
   onSave: (slot: Slot) => void;
   onDelete?: (id: string) => void;
   onClose: () => void;
@@ -24,7 +25,7 @@ function genId(): string {
   return 's' + (++idCounter).toString(36);
 }
 
-export function SlotEditor({ slot, defaultDuration, onSave, onDelete, onClose }: Props) {
+export function SlotEditor({ slot, defaultDuration, knownClients, onSave, onDelete, onClose }: Props) {
   const [date, setDate] = useState(slot?.date || today());
   const [start, setStart] = useState(slot?.start || '09:00');
   const defaultEnd = defaultDuration ? addMinutes(start, defaultDuration) : '10:00';
@@ -38,6 +39,13 @@ export function SlotEditor({ slot, defaultDuration, onSave, onDelete, onClose }:
   const [showAddClient, setShowAddClient] = useState(false);
   const [clientName, setClientName] = useState('');
   const [clientContact, setClientContact] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const filteredNames = knownClients
+    ? knownClients.filter(
+        n => n.toLowerCase().includes(clientName.toLowerCase()) && clientName.length > 0
+      )
+    : [];
 
   const handleSave = () => {
     onSave({
@@ -144,14 +152,34 @@ export function SlotEditor({ slot, defaultDuration, onSave, onDelete, onClose }:
               </div>
             )}
             {bookings.filter(b => b.status === 'confirmed').map((b, i) => (
-              <div key={i} style="padding:6px 8px;background:var(--bg);border-radius:6px;margin-bottom:4px;font-size:13px;">
-                {b.name}{b.contact ? ' (' + b.contact + ')' : ''}
+              <div key={i} style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--bg);border-radius:6px;margin-bottom:4px;font-size:13px;">
+                <span style="flex:1;">{b.name}{b.contact ? ' (' + b.contact + ')' : ''}</span>
+                <button class="btn btn-ghost btn-sm"
+                  style="padding:2px 6px;font-size:14px;line-height:1;min-width:0;color:var(--text-secondary);"
+                  onClick={() => setBookings(prev => prev.filter((_, j) => j !== i))}
+                  title="Убрать клиента">✕</button>
               </div>
             ))}
             {showAddClient ? (
               <div style="margin-top:8px;display:flex;flex-direction:column;gap:6px;">
-                <input class="form-input" type="text" placeholder="Имя клиента" value={clientName}
-                  onInput={e => setClientName(e.currentTarget.value)} autoFocus />
+                <div style="position:relative;">
+                  <input class="form-input" type="text" placeholder="Имя клиента" value={clientName}
+                    onInput={e => { setClientName(e.currentTarget.value); setShowSuggestions(true); }}
+                    onFocus={() => filteredNames.length > 0 && setShowSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                    autoFocus />
+                  {showSuggestions && filteredNames.length > 0 && (
+                    <div style="position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border);border-radius:6px;z-index:10;max-height:150px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                      {filteredNames.map(name => (
+                        <div key={name}
+                          style="padding:8px 10px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);"
+                          onMouseDown={() => { setClientName(name); setShowSuggestions(false); }}>
+                          {name}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <input class="form-input" type="text" placeholder="Контакт (необязательно)" value={clientContact}
                   onInput={e => setClientContact(e.currentTarget.value)} />
                 <div style="display:flex;gap:8px;">
