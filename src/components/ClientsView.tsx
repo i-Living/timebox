@@ -8,6 +8,7 @@ import type { Slot, OrganizerData } from '../types';
 interface Props {
   slots: Slot[];
   onChange?: (data: OrganizerData) => void;
+  onSlotsChanged?: (changedSlots: Slot[]) => void;
 }
 
 interface ClientSummary {
@@ -18,7 +19,7 @@ interface ClientSummary {
   attendance: { present: number; late: number; noShow: number };
 }
 
-export function ClientsView({ slots, onChange }: Props) {
+export function ClientsView({ slots, onChange, onSlotsChanged }: Props) {
   const clients = new Map<string, ClientSummary>();
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'visits' | 'last'>('visits');
@@ -90,6 +91,7 @@ export function ClientsView({ slots, onChange }: Props) {
     onChange({ ...data, slots: updated });
     setUndoClient({ name: clientName, slots: deletedSlots });
     setTimeout(() => setUndoClient(null), 4000);
+    onSlotsChanged?.(updated.filter((s: Slot) => s.bookings.some(b => b.status === 'confirmed')));
   };
 
   const handleUndoDelete = () => {
@@ -102,6 +104,7 @@ export function ClientsView({ slots, onChange }: Props) {
     });
     onChange({ ...data, slots: restored });
     setUndoClient(null);
+    onSlotsChanged?.(restored.filter((s: Slot) => s.bookings.some(b => b.status === 'confirmed')));
   };
 
   return (

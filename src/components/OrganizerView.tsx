@@ -55,17 +55,41 @@ export function OrganizerView() {
     setTimeout(() => setToast(''), 2000);
   };
 
+  // — Shared GCal sync helper —
+  const syncSlotToGcal = async (slot: Slot, clientId: string, organizerName: string): Promise<Slot | null> => {
+    const confirmedNames = slot.bookings
+      .filter(b => b.status === 'confirmed')
+      .map(b => b.name);
+    const gcalEvent = slotToEvent(slot, organizerName || '', confirmedNames, slot.notes);
+
+    try {
+      if (slot.gcalEventId) {
+        try {
+          await updateCalendarEvent(clientId, slot.gcalEventId, gcalEvent);
+          return null; // no change to local slot
+        } catch {
+          // Event was deleted externally — create a new one
+          const eventId = await createCalendarEvent(clientId, gcalEvent);
+          return { ...slot, gcalEventId: eventId };
+        }
+      } else {
+        const eventId = await createCalendarEvent(clientId, gcalEvent);
+        return { ...slot, gcalEventId: eventId };
+      }
+    } catch (e) {
+      console.error('GCal sync error:', e);
+      return null;
+    }
+  };
+
   const handleSaveSlot = async (slot: Slot) => {
     const isNew = !data.slots.find(s => s.id === slot.id);
-    let savedSlot: Slot;
 
     if (isNew) {
-      savedSlot = { ...slot };
-      setData(d => ({ ...d, slots: addSlot(d.slots, savedSlot) }));
+      setData(d => ({ ...d, slots: addSlot(d.slots, slot) }));
       showToast('Окно создано');
     } else {
-      savedSlot = slot;
-      setData(d => ({ ...d, slots: updateSlot(d.slots, savedSlot) }));
+      setData(d => ({ ...d, slots: updateSlot(d.slots, slot) }));
       showToast('Окно обновлено');
     }
 
@@ -74,29 +98,9 @@ export function OrganizerView() {
     const token = getStoredToken();
     if (!gcalClientId || !token) return;
 
-    const confirmedNames = savedSlot.bookings
-      .filter(b => b.status === 'confirmed')
-      .map(b => b.name);
-
-    const gcalEvent = slotToEvent(savedSlot, data.organizerName || '', confirmedNames, savedSlot.notes);
-
-    try {
-      if (savedSlot.gcalEventId) {
-        try {
-          await updateCalendarEvent(gcalClientId, savedSlot.gcalEventId, gcalEvent);
-        } catch {
-          // Event may have been deleted (e.g. undo restore) — create a new one
-          const eventId = await createCalendarEvent(gcalClientId, gcalEvent);
-          const updatedSlot = { ...savedSlot, gcalEventId: eventId };
-          setData(d => ({ ...d, slots: updateSlot(d.slots, updatedSlot) }));
-        }
-      } else {
-        const eventId = await createCalendarEvent(gcalClientId, gcalEvent);
-        const updatedSlot = { ...savedSlot, gcalEventId: eventId };
-        setData(d => ({ ...d, slots: updateSlot(d.slots, updatedSlot) }));
-      }
-    } catch (e) {
-      console.error('GCal sync error:', e);
+    const updatedSlot = await syncSlotToGcal(slot, gcalClientId, data.organizerName || '');
+    if (updatedSlot && updatedSlot.gcalEventId !== slot.gcalEventId) {
+      setData(d => ({ ...d, slots: updateSlot(d.slots, updatedSlot) }));
     }
   };
 
@@ -128,6 +132,17 @@ export function OrganizerView() {
     setData(d => ({ ...d, slots: [...d.slots, undoSlot] }));
     setUndoSlot(null);
     showToast('Восстановлено');
+
+    // Recreate the GCal event (fire-and-forget)
+    const gcalClientId = localStorage.getItem('timebox_gcal_client_id') || import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+    const token = getStoredToken();
+    if (gcalClientId && token && undoSlot.gcalEventId) {
+      syncSlotToGcal(undoSlot, gcalClientId, data.organizerName || '').then(updatedSlot => {
+        if (updatedSlot && updatedSlot.gcalEventId !== undoSlot.gcalEventId) {
+          setData(d => ({ ...d, slots: updateSlot(d.slots, updatedSlot) }));
+        }
+      }).catch(e => console.error('GCal undo sync error:', e));
+    }
   };
 
   const handleCopySlot = (slot: Slot) => {
@@ -141,6 +156,24 @@ export function OrganizerView() {
     };
     setData(d => ({ ...d, slots: addSlot(d.slots, newSlot) }));
     showToast('Окно скопировано на ' + formatDateFull(tomorrow));
+  };
+
+  const handleSlotsChanged = (changedSlots: Slot[]) => {
+    if (!changedSlots.length) return;
+    const gcalClientId = localStorage.getItem('timebox_gcal_client_id') || import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+    const token = getStoredToken();
+    if (!gcalClientId || !token) return;
+
+    for (const slot of changedSlots) {
+      syncSlotToGcal(slot, data.organizerName || '', gcalClientId).then(updatedSlot => {
+        if (updatedSlot && updatedSlot.gcalEventId !== slot.gcalEventId) {
+          setData(d => ({
+            ...d,
+            slots: updateSlot(d.slots, updatedSlot),
+          }));
+        }
+      }).catch(e => console.error('GCal sync error:', e));
+    }
   };
 
   const goToday = () => {
@@ -230,7 +263,7 @@ export function OrganizerView() {
 
       {tab === 'diary' && <div class="tab-content" key="diary"><DiaryView slots={data.slots} onChange={setData} /></div>}
 
-      {tab === 'clients' && <div class="tab-content" key="clients"><ClientsView slots={data.slots} onChange={setData} /></div>}
+      {tab === 'clients' && <div class="tab-content" key="clients"><ClientsView slots={data.slots} onChange={setData} onSlotsChanged={handleSlotsChanged} /></div>}
 
       {tab === 'settings' && <div class="tab-content" key="settings"><SettingsView data={data} onChange={setData} /></div>}
 

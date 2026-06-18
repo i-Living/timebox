@@ -67,6 +67,7 @@ export function SlotEditor({ slot, defaultDuration, knownClients, onSave, onDele
 
   const handleSave = () => {
     onSave({
+      ...slot,
       id: slot?.id || genId(),
       date,
       start,
