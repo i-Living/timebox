@@ -117,8 +117,34 @@ export function OrganizerView() {
   };
 
   const handleDeleteSlot = (id: string) => {
-    const slot = data.slots.find(s => s.id === id);
-    if (!slot) return;
+    let slot = data.slots.find(s => s.id === id);
+
+    // Recurring instance that hasn't been saved as override yet?
+    if (!slot) {
+      const match = id.match(/^(.+)_(\d{4}-\d{2}-\d{2})$/);
+      if (match) {
+        const baseId = match[1];
+        const baseSlot = data.slots.find(s => s.id === baseId && s.repeat !== undefined);
+        if (baseSlot) {
+          // Create a cancelled override for this date
+          const override: Slot = {
+            ...baseSlot,
+            id,
+            date: match[2],
+            repeat: undefined,
+            status: 'cancelled',
+            bookings: [],
+            notes: undefined,
+            gcalEventId: undefined,
+          };
+          setData(d => ({ ...d, slots: addSlot(d.slots, override) }));
+          showToast('Этот день отменён');
+          return;
+        }
+      }
+      return;
+    }
+
     setData(d => ({ ...d, slots: deleteSlot(d.slots, id) }));
     setUndoSlot(slot);
     setToast('Окно удалено');
