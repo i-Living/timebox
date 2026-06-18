@@ -56,7 +56,7 @@ export function OrganizerView() {
   };
 
   // — Shared GCal sync helper —
-  const syncSlotToGcal = async (slot: Slot, clientId: string, organizerName: string): Promise<Slot | null> => {
+  const syncSlotToGcal = async (slot: Slot, clientId: string, organizerName: string, knownEventIds: Set<string>): Promise<Slot | null> => {
     const confirmedNames = slot.bookings
       .filter(b => b.status === 'confirmed')
       .map(b => b.name);
@@ -76,7 +76,8 @@ export function OrganizerView() {
       } else {
         // No event ID saved locally — try to find an orphan event at this time
         const orphanId = await findEventForSlot(clientId, slot);
-        if (orphanId) {
+        if (orphanId && !knownEventIds.has(orphanId)) {
+          // Unclaimed orphan — adopt it
           await updateCalendarEvent(clientId, orphanId, gcalEvent);
           return { ...slot, gcalEventId: orphanId };
         }
@@ -88,7 +89,6 @@ export function OrganizerView() {
       return null;
     }
   };
-
   const handleSaveSlot = async (slot: Slot) => {
     const isNew = !data.slots.find(s => s.id === slot.id);
 
@@ -98,7 +98,8 @@ export function OrganizerView() {
     const token = getStoredToken();
     if (gcalClientId && token) {
       try {
-        const result = await syncSlotToGcal(slot, gcalClientId, data.organizerName || '');
+        const knownIds = new Set(data.slots.map(s => s.gcalEventId).filter((id): id is string => !!id));
+        const result = await syncSlotToGcal(slot, gcalClientId, data.organizerName || '', knownIds);
         if (result) finalSlot = result;
       } catch (e) {
         console.error('GCal sync error:', e);
@@ -148,7 +149,8 @@ export function OrganizerView() {
     const gcalClientId = localStorage.getItem('timebox_gcal_client_id') || import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
     const token = getStoredToken();
     if (gcalClientId && token && undoSlot.gcalEventId) {
-      syncSlotToGcal(undoSlot, gcalClientId, data.organizerName || '').then(updatedSlot => {
+      const knownIds = new Set(data.slots.map(s => s.gcalEventId).filter((id): id is string => !!id));
+      syncSlotToGcal(undoSlot, gcalClientId, data.organizerName || '', knownIds).then(updatedSlot => {
         if (updatedSlot && updatedSlot.gcalEventId !== undoSlot.gcalEventId) {
           setData(d => ({ ...d, slots: updateSlot(d.slots, updatedSlot) }));
         }
@@ -175,8 +177,9 @@ export function OrganizerView() {
     const token = getStoredToken();
     if (!gcalClientId || !token) return;
 
+    const knownIds = new Set(data.slots.map(s => s.gcalEventId).filter((id): id is string => !!id));
     for (const slot of changedSlots) {
-      syncSlotToGcal(slot, data.organizerName || '', gcalClientId).then(updatedSlot => {
+      syncSlotToGcal(slot, gcalClientId, data.organizerName || '', knownIds).then(updatedSlot => {
         if (updatedSlot && updatedSlot.gcalEventId !== slot.gcalEventId) {
           setData(d => ({
             ...d,
