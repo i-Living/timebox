@@ -1,6 +1,6 @@
 interface Props {
-  active: 'calendar' | 'diary' | 'settings';
-  onSelect: (tab: 'calendar' | 'diary' | 'settings') => void;
+  active: 'calendar' | 'clients' | 'diary' | 'settings';
+  onSelect: (tab: 'calendar' | 'clients' | 'diary' | 'settings') => void;
 }
 
 export function BottomNav({ active, onSelect }: Props) {
@@ -9,6 +9,10 @@ export function BottomNav({ active, onSelect }: Props) {
       <button class={`nav-item ${active === 'calendar' ? 'active' : ''}`} onClick={() => onSelect('calendar')}>
         <span class="nav-icon">📅</span>
         Календарь
+      </button>
+      <button class={`nav-item ${active === 'clients' ? 'active' : ''}`} onClick={() => onSelect('clients')}>
+        <span class="nav-icon">👥</span>
+        Клиенты
       </button>
       <button class={`nav-item ${active === 'diary' ? 'active' : ''}`} onClick={() => onSelect('diary')}>
         <span class="nav-icon">📓</span>
