@@ -50,7 +50,13 @@ export function expandSlots(slots: Slot[], from: string, to: string): Slot[] {
       while (cursor <= end) {
         const d = cursor.toISOString().slice(0, 10);
         if (d >= from && d >= s.date) {
-          result.push({ ...s, id: s.id + '_' + d, date: d, repeat: undefined });
+          const expandedId = s.id + '_' + d;
+          const override = slots.find(sl => sl.id === expandedId);
+          if (override) {
+            result.push(override);
+          } else {
+            result.push({ ...s, id: expandedId, date: d, repeat: undefined });
+          }
         }
         cursor.setDate(cursor.getDate() + freqDays);
       }

@@ -34,6 +34,7 @@ export function SlotEditor({ slot, defaultDuration, onSave, onDelete, onClose }:
   const [repeatFreq, setRepeatFreq] = useState<'daily' | 'weekly' | 'biweekly'>(slot?.repeat?.freq || 'weekly');
   const [repeatUntil, setRepeatUntil] = useState(slot?.repeat?.until || '');
   const [notes, setNotes] = useState(slot?.notes || '');
+  const [bookings, setBookings] = useState<Booking[]>(slot?.bookings || []);
   const [showAddClient, setShowAddClient] = useState(false);
   const [clientName, setClientName] = useState('');
   const [clientContact, setClientContact] = useState('');
@@ -46,7 +47,7 @@ export function SlotEditor({ slot, defaultDuration, onSave, onDelete, onClose }:
       end,
       capacity,
       status: 'open',
-      bookings: slot?.bookings || [],
+      bookings,
       notes: notes || undefined,
       repeat: repeat ? { freq: repeatFreq, until: repeatUntil } : undefined,
     });
@@ -61,17 +62,14 @@ export function SlotEditor({ slot, defaultDuration, onSave, onDelete, onClose }:
   };
 
   const handleAddClient = () => {
-    if (!slot || !clientName.trim()) return;
+    if (!clientName.trim()) return;
     const newBooking: Booking = {
       name: clientName.trim(),
       contact: clientContact.trim(),
       status: 'confirmed',
       bookedAt: new Date().toISOString(),
     };
-    onSave({
-      ...slot,
-      bookings: [...slot.bookings, newBooking],
-    });
+    setBookings(prev => [...prev, newBooking]);
     setClientName('');
     setClientContact('');
     setShowAddClient(false);
@@ -140,12 +138,12 @@ export function SlotEditor({ slot, defaultDuration, onSave, onDelete, onClose }:
         {slot && (
           <div style="margin-top:12px;">
             <h3 style="font-size:14px;font-weight:600;margin-bottom:6px;">Клиенты</h3>
-            {slot.bookings.filter(b => b.status === 'confirmed').length === 0 && (
+            {bookings.filter(b => b.status === 'confirmed').length === 0 && (
               <div style="font-size:13px;color:var(--text-secondary);margin-bottom:6px;">
                 Нет записанных клиентов
               </div>
             )}
-            {slot.bookings.filter(b => b.status === 'confirmed').map((b, i) => (
+            {bookings.filter(b => b.status === 'confirmed').map((b, i) => (
               <div key={i} style="padding:6px 8px;background:var(--bg);border-radius:6px;margin-bottom:4px;font-size:13px;">
                 {b.name}{b.contact ? ' (' + b.contact + ')' : ''}
               </div>
