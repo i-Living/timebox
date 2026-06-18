@@ -127,7 +127,6 @@ export function OrganizerView() {
             onSelectDate={setSelectedDate}
             onPrevWeek={handlePrevWeek}
             onNextWeek={handleNextWeek}
-            onSwipeWeek={handleNextWeek}
           />
 
           <div class="week-nav">
