@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Bottom navigation bar with four tabs: calendar, clients, diary, settings.
+ * Highlights the active tab and calls onSelect when a tab is clicked.
+ */
+
 import { Calendar, Users, BookOpen, Settings } from 'lucide-react';
 
 interface Props {
@@ -5,6 +10,12 @@ interface Props {
   onSelect: (tab: 'calendar' | 'clients' | 'diary' | 'settings') => void;
 }
 
+/**
+ * Bottom navigation component for switching between main app sections.
+ * @param {Props} props - Component props
+ * @param {string} props.active - Currently active tab identifier
+ * @param {function} props.onSelect - Callback fired when a tab is selected
+ */
 export function BottomNav({ active, onSelect }: Props) {
   return (
     <div class="bottom-nav">

@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Main organizer view — calendar, diary, clients, and settings tabs.
+ * Manages slot CRUD, Google Calendar sync, week navigation, and share dialog.
+ */
 
 import { ExternalLink, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'preact/hooks';
@@ -15,6 +19,10 @@ import { ClientsView } from './ClientsView';
 import { BottomNav } from './BottomNav';
 import { SettingsView } from './SettingsView';
 
+/**
+ * Main organizer component — manages all views and slot operations.
+ * @returns {JSX.Element} The full organizer interface
+ */
 export function OrganizerView() {
   const [data, setData] = useState(() => load());
   const [selectedDate, setSelectedDate] = useState(today());
@@ -55,7 +63,14 @@ export function OrganizerView() {
     setTimeout(() => setToast(''), 2000);
   };
 
-  // — Shared GCal sync helper —
+  /**
+   * Syncs a slot to Google Calendar — creates, updates, or adopts orphan events.
+   * @param slot - The slot to sync
+   * @param clientId - Google Calendar client ID
+   * @param organizerName - Name of the organizer
+   * @param knownEventIds - Set of known event IDs to avoid duplicate adoption
+   * @returns Updated slot with gcalEventId, or null if no change
+   */
   const syncSlotToGcal = async (slot: Slot, clientId: string, organizerName: string, knownEventIds: Set<string>): Promise<Slot | null> => {
     const confirmedNames = slot.bookings
       .filter(b => b.status === 'confirmed')
@@ -89,6 +104,11 @@ export function OrganizerView() {
       return null;
     }
   };
+
+  /**
+   * Handles slot save — syncs to GCal first, then saves locally.
+   * @param slot - The slot to save (new or existing)
+   */
   const handleSaveSlot = async (slot: Slot) => {
     const isNew = !data.slots.find(s => s.id === slot.id);
 
@@ -116,6 +136,10 @@ export function OrganizerView() {
     }
   };
 
+  /**
+   * Handles slot deletion — supports recurring slot override cancellation.
+   * @param id - Slot ID (may include date suffix for recurring overrides)
+   */
   const handleDeleteSlot = (id: string) => {
     let slot = data.slots.find(s => s.id === id);
 
@@ -165,6 +189,9 @@ export function OrganizerView() {
     }
   };
 
+  /**
+   * Undoes the last deletion — restores slot and recreates GCal event.
+   */
   const handleUndoDelete = () => {
     if (!undoSlot) return;
     setData(d => ({ ...d, slots: [...d.slots, undoSlot] }));
@@ -184,6 +211,10 @@ export function OrganizerView() {
     }
   };
 
+  /**
+   * Copies a slot to the next day with a new ID.
+   * @param slot - The slot to copy
+   */
   const handleCopySlot = (slot: Slot) => {
     const tomorrow = addDays(slot.date, 1);
     const newSlot: Slot = {
@@ -197,6 +228,10 @@ export function OrganizerView() {
     showToast('Окно скопировано на ' + formatDateFull(tomorrow));
   };
 
+  /**
+   * Handles batch slot changes from child components — syncs each to GCal.
+   * @param changedSlots - Array of slots that were modified
+   */
   const handleSlotsChanged = (changedSlots: Slot[]) => {
     if (!changedSlots.length) return;
     const gcalClientId = localStorage.getItem('timebox_gcal_client_id') || import.meta.env.VITE_GOOGLE_CLIENT_ID || '';

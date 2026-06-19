@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Onboarding screen that introduces the TimeBox app workflow to new users.
+ * Displays step-by-step instructions and a "Start" button to proceed.
+ */
+
 import { Clock, Calendar, ClipboardList, Pen } from 'lucide-react';
 import { Button } from './Button';
 
@@ -5,6 +10,11 @@ interface Props {
   onDone: () => void;
 }
 
+/**
+ * OnboardingView component - renders the welcome screen with app instructions.
+ * @param {Props} props - Component props
+ * @param {() => void} props.onDone - Callback when user clicks "Start" button
+ */
 export function OnboardingView({ onDone }: Props) {
   return (
     <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;">

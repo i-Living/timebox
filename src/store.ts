@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Utility functions for managing timebox scheduling data in localStorage.
+ * Provides CRUD operations for slots and bookings, recurring slot expansion, and data persistence.
+ */
 
 import type { Slot, OrganizerData, Booking } from './types';
 
@@ -14,6 +18,10 @@ const defaults: OrganizerData = {
   workingDays: [1, 2, 3, 4, 5],
 };
 
+/**
+ * Loads organizer data from localStorage, falling back to defaults on error or missing data.
+ * @returns {OrganizerData} Merged data with defaults
+ */
 export function load(): OrganizerData {
   try {
     const raw = localStorage.getItem(KEY);
@@ -24,11 +32,20 @@ export function load(): OrganizerData {
   }
 }
 
+/**
+ * Persists organizer data to localStorage.
+ * @param {OrganizerData} d - Data to save
+ */
 export function save(d: OrganizerData): void {
   localStorage.setItem(KEY, JSON.stringify(d));
 }
 
-// Check if a slot is a standalone override for a recurring slot
+/**
+ * Checks if a slot is a standalone override for a recurring slot (e.g., "slotId_2024-01-15").
+ * @param {Slot} slot - Slot to check
+ * @param {Slot[]} allSlots - All slots for context
+ * @returns {boolean} True if slot overrides a recurring instance
+ */
 function isRecurringOverride(slot: Slot, allSlots: Slot[]): boolean {
   const match = slot.id.match(/^(.+)_(\d{4}-\d{2}-\d{2})$/);
   if (!match) return false;
@@ -36,7 +53,14 @@ function isRecurringOverride(slot: Slot, allSlots: Slot[]): boolean {
   return allSlots.some(s => s.id === baseId && s.repeat !== undefined);
 }
 
-// Expand recurring slots into concrete instances for a date range
+/**
+ * Expands recurring slots into concrete instances for a date range.
+ * Handles overrides and respects cancellation status.
+ * @param {Slot[]} slots - All slots (including recurring templates)
+ * @param {string} from - Start date (YYYY-MM-DD)
+ * @param {string} to - End date (YYYY-MM-DD)
+ * @returns {Slot[]} Expanded and sorted slot instances
+ */
 export function expandSlots(slots: Slot[], from: string, to: string): Slot[] {
   const result: Slot[] = [];
   for (const s of slots) {
@@ -73,18 +97,43 @@ export function expandSlots(slots: Slot[], from: string, to: string): Slot[] {
   return result.sort((a, b) => a.date.localeCompare(b.date) || a.start.localeCompare(b.start));
 }
 
+/**
+ * Adds a new slot to the array.
+ * @param {Slot[]} slots - Current slots
+ * @param {Slot} slot - New slot to add
+ * @returns {Slot[]} Updated slots array
+ */
 export function addSlot(slots: Slot[], slot: Slot): Slot[] {
   return [...slots, slot];
 }
 
+/**
+ * Updates an existing slot by ID.
+ * @param {Slot[]} slots - Current slots
+ * @param {Slot} updated - Slot with updated data
+ * @returns {Slot[]} Updated slots array
+ */
 export function updateSlot(slots: Slot[], updated: Slot): Slot[] {
   return slots.map(s => s.id === updated.id ? updated : s);
 }
 
+/**
+ * Deletes a slot by ID.
+ * @param {Slot[]} slots - Current slots
+ * @param {string} id - ID of slot to delete
+ * @returns {Slot[]} Updated slots array
+ */
 export function deleteSlot(slots: Slot[], id: string): Slot[] {
   return slots.filter(s => s.id !== id);
 }
 
+/**
+ * Adds a booking to a specific slot.
+ * @param {Slot[]} slots - Current slots
+ * @param {string} slotId - Target slot ID
+ * @param {Booking} booking - Booking to add
+ * @returns {Slot[]} Updated slots array
+ */
 export function addBooking(slots: Slot[], slotId: string, booking: Booking): Slot[] {
   return slots.map(s => {
     if (s.id !== slotId) return s;
@@ -92,6 +141,13 @@ export function addBooking(slots: Slot[], slotId: string, booking: Booking): Slo
   });
 }
 
+/**
+ * Confirms a booking at a given index within a slot.
+ * @param {Slot[]} slots - Current slots
+ * @param {string} slotId - Target slot ID
+ * @param {number} bookingIdx - Index of booking to confirm
+ * @returns {Slot[]} Updated slots array
+ */
 export function confirmBooking(slots: Slot[], slotId: string, bookingIdx: number): Slot[] {
   return slots.map(s => {
     if (s.id !== slotId) return s;
@@ -102,6 +158,13 @@ export function confirmBooking(slots: Slot[], slotId: string, bookingIdx: number
   });
 }
 
+/**
+ * Cancels a booking at a given index within a slot.
+ * @param {Slot[]} slots - Current slots
+ * @param {string} slotId - Target slot ID
+ * @param {number} bookingIdx - Index of booking to cancel
+ * @returns {Slot[]} Updated slots array
+ */
 export function cancelBooking(slots: Slot[], slotId: string, bookingIdx: number): Slot[] {
   return slots.map(s => {
     if (s.id !== slotId) return s;
@@ -112,12 +175,23 @@ export function cancelBooking(slots: Slot[], slotId: string, bookingIdx: number)
   });
 }
 
+/**
+ * Gets slots with available capacity (not fully booked) within a date range.
+ * @param {Slot[]} slots - All slots
+ * @param {string} from - Start date (YYYY-MM-DD)
+ * @param {string} to - End date (YYYY-MM-DD)
+ * @returns {Slot[]} Slots with remaining capacity
+ */
 export function getFreeSlots(slots: Slot[], from: string, to: string): Slot[] {
   const expanded = expandSlots(slots, from, to);
   return expanded.filter(s => s.bookings.filter(b => b.status === 'confirmed').length < s.capacity);
 }
 
+/**
+ * Counts confirmed bookings for a slot.
+ * @param {Slot} slot - Slot to check
+ * @returns {number} Number of confirmed bookings
+ */
 export function getBookedCount(slot: Slot): number {
   return slot.bookings.filter(b => b.status === 'confirmed').length;
 }
-

@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Card component for displaying a time slot with booking status and copy functionality.
+ */
 
 import type { Slot } from '../types';
 import { getBookedCount } from '../store';
@@ -9,6 +12,13 @@ interface Props {
   onCopy?: () => void;
 }
 
+/**
+ * SlotCard component - renders a time slot card with availability status and booking details.
+ * @param {Props} props - Component props
+ * @param {Slot} props.slot - The slot data to display
+ * @param {() => void} props.onClick - Click handler for the card
+ * @param {() => void} [props.onCopy] - Optional handler for copying slot to next day
+ */
 export function SlotCard({ slot, onClick, onCopy }: Props) {
   const booked = getBookedCount(slot);
   const remaining = slot.capacity - booked;
@@ -16,6 +26,7 @@ export function SlotCard({ slot, onClick, onCopy }: Props) {
 
   const cardClass = slot.status === 'cancelled' ? 'cancelled' : isFull ? 'full' : 'open';
 
+  // Determine status text and styling based on slot state
   let statusText = '';
   let statusClass = '';
   if (slot.status === 'cancelled') {

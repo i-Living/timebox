@@ -1,3 +1,7 @@
+/**
+ * @fileoverview View component for displaying and managing clients with search, sort, and delete functionality.
+ * Aggregates client data from slots and provides undo support for deletions.
+ */
 
 import { useState } from 'preact/hooks';
 import { Users, Check, Clock, X } from 'lucide-react';
@@ -19,12 +23,20 @@ interface ClientSummary {
   attendance: { present: number; late: number; noShow: number };
 }
 
+/**
+ * ClientsView component - aggregates and displays client data from slots.
+ * @param {Props} props - Component props
+ * @param {Slot[]} props.slots - Array of time slots with bookings
+ * @param {(data: OrganizerData) => void} [props.onChange] - Callback when data changes
+ * @param {(changedSlots: Slot[]) => void} [props.onSlotsChanged] - Callback when slots change
+ */
 export function ClientsView({ slots, onChange, onSlotsChanged }: Props) {
   const clients = new Map<string, ClientSummary>();
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'visits' | 'last'>('visits');
   const [undoClient, setUndoClient] = useState<{ name: string; slots: Slot[] } | null>(null);
 
+  // Aggregate client data from all slots, skipping cancelled slots and unconfirmed bookings
   for (const slot of slots) {
     if (slot.status === 'cancelled') continue;
     for (const b of slot.bookings) {
@@ -74,6 +86,10 @@ export function ClientsView({ slots, onChange, onSlotsChanged }: Props) {
     return sum + s.bookings.filter(b => b.status === 'confirmed').length;
   }, 0);
 
+  /**
+   * Deletes all bookings for a client and saves state for undo.
+   * @param {string} clientName - Name of client to delete
+   */
   const handleDeleteClient = (clientName: string) => {
     if (!onChange) return;
     const data = JSON.parse(localStorage.getItem('timebox_data') || '{}');
@@ -94,6 +110,7 @@ export function ClientsView({ slots, onChange, onSlotsChanged }: Props) {
     onSlotsChanged?.(updated.filter((s: Slot) => s.bookings.some(b => b.status === 'confirmed')));
   };
 
+  /** Restores deleted client bookings from undo state */
   const handleUndoDelete = () => {
     if (!onChange || !undoClient) return;
     const data = JSON.parse(localStorage.getItem('timebox_data') || '{}');

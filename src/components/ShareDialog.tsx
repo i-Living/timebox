@@ -1,3 +1,6 @@
+/**
+ * @fileoverview ShareDialog component — allows users to select a date range, generate a shareable text summary of free slots, and copy or share it.
+ */
 
 import { useState } from 'preact/hooks';
 import { Clipboard, Share2, RefreshCw } from 'lucide-react';
@@ -12,6 +15,12 @@ interface Props {
   onClose: () => void;
 }
 
+/**
+ * Modal dialog for generating and sharing a text summary of free slots in a date range.
+ * @param {Props} props
+ * @param {Slot[]} props.slots - All available slots
+ * @param {() => void} props.onClose - Callback to close the dialog
+ */
 export function ShareDialog({ slots, onClose }: Props) {
   const [fromDate, setFromDate] = useState(today());
   const [toDate, setToDate] = useState(addDays(today(), 7));
@@ -20,6 +29,7 @@ export function ShareDialog({ slots, onClose }: Props) {
 
   const freeSlots = getFreeSlots(slots, fromDate, toDate);
 
+  // Generates formatted text grouped by date with remaining capacity info
   const generateText = () => {
     const lines: string[] = [];
     lines.push('📅 Свободные окна:');
@@ -53,12 +63,14 @@ export function ShareDialog({ slots, onClose }: Props) {
     setShareText(lines.join('\n'));
   };
 
+  // Copies generated text to clipboard and shows temporary success state
   const copyText = async () => {
     await navigator.clipboard.writeText(shareText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Uses native share API if available, otherwise falls back to clipboard copy
   const handleShare = async () => {
     if (navigator.share) {
       await navigator.share({ text: shareText });

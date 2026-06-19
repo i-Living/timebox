@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Google Calendar integration via Google Identity Services (GIS) token client.
+ * Handles OAuth 2.0 token management and Calendar API operations for TimeBox.
+ */
 
 /**
  * Google Calendar integration via Google Identity Services (GIS) token client.
@@ -42,6 +46,10 @@ interface TokenData {
 let gisLoaded = false;
 let gisLoadPromise: Promise<void> | null = null;
 
+/**
+ * Loads the Google Identity Services script dynamically.
+ * @returns Promise that resolves when GIS is ready
+ */
 function loadGisScript(): Promise<void> {
   if (gisLoaded) return Promise.resolve();
   if (gisLoadPromise) return gisLoadPromise;
@@ -78,6 +86,10 @@ function loadGisScript(): Promise<void> {
 
 // ─── Token storage ───
 
+/**
+ * Retrieves stored token data from localStorage.
+ * @returns TokenData if valid, null otherwise
+ */
 export function getStoredToken(): TokenData | null {
   try {
     const raw = localStorage.getItem(TOKEN_KEY);
@@ -90,10 +102,17 @@ export function getStoredToken(): TokenData | null {
   }
 }
 
+/**
+ * Saves token data to localStorage.
+ * @param token - Token data to persist
+ */
 function saveToken(token: TokenData): void {
   localStorage.setItem(TOKEN_KEY, JSON.stringify(token));
 }
 
+/**
+ * Removes stored token from localStorage.
+ */
 export function clearToken(): void {
   localStorage.removeItem(TOKEN_KEY);
 }
@@ -110,6 +129,8 @@ interface TokenResponse {
  * On first call this shows the Google consent screen.
  * On subsequent calls (consent already granted) the popup opens and closes
  * silently — the user sees at most a brief flash.
+ * @param clientId - Google OAuth client ID
+ * @returns Token response with access_token and expires_in
  */
 function requestAccessToken(clientId: string): Promise<TokenResponse> {
   return new Promise<TokenResponse>((resolve, reject) => {
@@ -148,6 +169,11 @@ function requestAccessToken(clientId: string): Promise<TokenResponse> {
 
 // ─── Public: connect (initial consent) ───
 
+/**
+ * Initiates Google Calendar connection with OAuth consent flow.
+ * @param clientId - Google OAuth client ID
+ * @returns TokenData with access token and optional email
+ */
 export async function connectGoogleCalendar(clientId: string): Promise<TokenData> {
   await loadGisScript();
 
@@ -175,6 +201,11 @@ export async function connectGoogleCalendar(clientId: string): Promise<TokenData
 
 // ─── Public: get a valid access token (silent refresh if expired) ───
 
+/**
+ * Retrieves a valid access token, refreshing if expired.
+ * @param clientId - Google OAuth client ID
+ * @returns Valid access token string
+ */
 export async function getAccessToken(clientId: string): Promise<string> {
   const token = getStoredToken();
   if (!token) throw new Error('Not connected to Google Calendar');
@@ -203,6 +234,12 @@ export interface GCalEvent {
   timezone?: string;
 }
 
+/**
+ * Creates a new event in the primary Google Calendar.
+ * @param clientId - Google OAuth client ID
+ * @param event - Event details to create
+ * @returns Created event ID
+ */
 export async function createCalendarEvent(
   clientId: string,
   event: GCalEvent,
@@ -235,6 +272,12 @@ export async function createCalendarEvent(
   return data.id as string;
 }
 
+/**
+ * Updates an existing calendar event.
+ * @param clientId - Google OAuth client ID
+ * @param eventId - ID of event to update
+ * @param event - Updated event details
+ */
 export async function updateCalendarEvent(
   clientId: string,
   eventId: string,
@@ -265,6 +308,11 @@ export async function updateCalendarEvent(
   }
 }
 
+/**
+ * Deletes a calendar event by ID.
+ * @param clientId - Google OAuth client ID
+ * @param eventId - ID of event to delete
+ */
 export async function deleteCalendarEvent(
   clientId: string,
   eventId: string,
@@ -286,6 +334,9 @@ export async function deleteCalendarEvent(
  * Find an existing TimeBox event at the given slot time.
  * Returns the event ID if found, or null if no matching event exists.
  * Used to re-use orphan events (created before gcalEventId was tracked).
+ * @param clientId - Google OAuth client ID
+ * @param slot - Time slot to search for
+ * @returns Event ID if found, null otherwise
  */
 export async function findEventForSlot(
   clientId: string,
@@ -330,6 +381,13 @@ export async function findEventForSlot(
   return null;
 }
 
+/**
+ * Retrieves busy time slots from primary calendar within a time range.
+ * @param clientId - Google OAuth client ID
+ * @param timeMin - Start of time range (ISO string)
+ * @param timeMax - End of time range (ISO string)
+ * @returns Array of busy time slots with start and end times
+ */
 export async function getFreeBusy(
   clientId: string,
   timeMin: string,
@@ -361,6 +419,12 @@ export async function getFreeBusy(
 
 /**
  * Build a calendar event from a slot + confirmed bookings.
+ * @param slot - Time slot details
+ * @param organizerName - Name of the organizer
+ * @param clientNames - Array of client names
+ * @param notes - Optional notes
+ * @param timezone - Optional timezone (defaults to local)
+ * @returns GCalEvent object ready for API
  */
 export function slotToEvent(
   slot: { date: string; start: string; end: string },

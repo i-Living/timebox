@@ -1,3 +1,6 @@
+/**
+ * @fileoverview Diary view component for displaying past and future lesson slots with attendance tracking and notes editing.
+ */
 
 import { useState } from 'preact/hooks';
 import { BookOpen, Check, Clock, X, Pencil, Plus } from 'lucide-react';
@@ -10,11 +13,19 @@ interface Props {
   onChange?: (data: OrganizerData) => void;
 }
 
+/**
+ * DiaryView component - displays lesson history with attendance management and notes.
+ * @param {Props} props - Component props
+ * @param {Slot[]} props.slots - Array of time slots to display
+ * @param {(data: OrganizerData) => void} [props.onChange] - Callback when data changes
+ * @returns {JSX.Element} Diary view with attendance buttons and notes editor
+ */
 export function DiaryView({ slots, onChange }: Props) {
   const today = new Date().toISOString().slice(0, 10);
   const [editingNotes, setEditingNotes] = useState<string | null>(null);
   const [notesText, setNotesText] = useState('');
 
+  // Separate slots into past (with bookings) and future (with notes), sorted chronologically
   const pastSlots = slots
     .filter(s => s.date < today || (s.date <= today && s.bookings.length > 0))
     .sort((a, b) => b.date.localeCompare(a.date) || b.start.localeCompare(b.start));
@@ -25,6 +36,13 @@ export function DiaryView({ slots, onChange }: Props) {
 
   const allSlots = [...pastSlots, ...futureSlots];
 
+  /**
+   * Updates attendance status for a specific booking in a slot.
+   * Reads current data from localStorage, modifies the attendance field, and triggers onChange.
+   * @param {string} slotId - ID of the slot to update
+   * @param {number} bookingIdx - Index of the booking within the slot
+   * @param {'present' | 'late' | 'no-show'} value - New attendance status
+   */
   const setAttendance = (slotId: string, bookingIdx: number, value: 'present' | 'late' | 'no-show') => {
     if (!onChange) return;
     const data = JSON.parse(localStorage.getItem('timebox_data') || '{}');
@@ -38,6 +56,11 @@ export function DiaryView({ slots, onChange }: Props) {
     onChange({ ...data, slots: updated });
   };
 
+  /**
+   * Saves notes for a specific slot to localStorage and triggers onChange.
+   * Clears editing state after successful save.
+   * @param {string} slotId - ID of the slot to save notes for
+   */
   const saveNotes = (slotId: string) => {
     if (!onChange) return;
     const data = JSON.parse(localStorage.getItem('timebox_data') || '{}');

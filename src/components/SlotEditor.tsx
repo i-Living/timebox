@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Slot editor modal component for creating/editing time slots with client management.
+ * Supports recurring slots, client autocomplete, and booking management.
+ */
 
 import { useState, useEffect } from 'preact/hooks';
 import { Check, X } from 'lucide-react';
@@ -14,6 +18,10 @@ interface Props {
   onClose: () => void;
 }
 
+/**
+ * Adds minutes to a time string (HH:MM) and returns new time string.
+ * Handles day wrap-around (24h format).
+ */
 function addMinutes(time: string, minutes: number): string {
   const [h, m] = time.split(':').map(Number);
   const total = h * 60 + m + minutes;
@@ -27,6 +35,16 @@ function genId(): string {
   return 's' + (++idCounter).toString(36);
 }
 
+/**
+ * SlotEditor component - modal form for creating/editing appointment slots.
+ * @param {Props} props - Component props
+ * @param {Slot} [props.slot] - Existing slot to edit (undefined = create new)
+ * @param {number} [props.defaultDuration] - Default slot duration in minutes
+ * @param {string[]} [props.knownClients] - Client names for autocomplete
+ * @param {function} props.onSave - Callback with saved slot data
+ * @param {function} [props.onDelete] - Callback for slot deletion
+ * @param {function} props.onClose - Callback to close the editor
+ */
 export function SlotEditor({ slot, defaultDuration, knownClients, onSave, onDelete, onClose }: Props) {
   const [date, setDate] = useState(slot?.date || today());
   const [start, setStart] = useState(slot?.start || '09:00');

@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Settings panel for the TimeBox organizer app.
+ * Manages organizer name, theme, working hours/days, slot duration,
+ * Google Calendar integration, data export/import, and FAQ.
+ */
+
 import { useState, useEffect } from 'preact/hooks';
 import { Moon, Sun, Check, Download, Upload, RefreshCw, Trash2, Link } from 'lucide-react';
 import { Button } from './Button';
@@ -19,6 +25,12 @@ function getSavedClientId(): string {
   return localStorage.getItem(GCAL_CLIENT_ID_KEY) || envId;
 }
 
+/**
+ * Settings view component for configuring the TimeBox organizer.
+ * @param {Props} props - Component props
+ * @param {OrganizerData} props.data - Current organizer settings data
+ * @param {function} props.onChange - Callback to update organizer settings
+ */
 export function SettingsView({ data, onChange }: Props) {
   const update = (patch: Partial<OrganizerData>) => onChange({ ...data, ...patch });
 
@@ -122,6 +134,7 @@ export function SettingsView({ data, onChange }: Props) {
   const [gcalLoading, setGcalLoading] = useState(false);
   const [gcalError, setGcalError] = useState('');
 
+  // Check for existing Google Calendar token on mount
   useEffect(() => {
     const token = getStoredToken();
     if (token) {
@@ -130,6 +143,7 @@ export function SettingsView({ data, onChange }: Props) {
     }
   }, []);
 
+  // Initiate Google Calendar OAuth flow
   const handleConnect = async () => {
     const clientId = getSavedClientId();
     if (!clientId) {
@@ -149,6 +163,7 @@ export function SettingsView({ data, onChange }: Props) {
     }
   };
 
+  // Disconnect Google Calendar and clear stored token
   const handleDisconnect = () => {
     clearToken();
     setGcalConnected(false);
