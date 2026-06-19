@@ -7,7 +7,10 @@
  * @returns {string} Today's date string
  */
 export function today(): string {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
 }
 
 /**
@@ -41,11 +44,14 @@ export function formatDateFull(d: string): string {
  * @returns {string} Monday date string
  */
 export function getWeekStart(d: string): string {
-  const date = new Date(d);
-  const day = date.getDay();
-  const diff = day === 0 ? -6 : 1 - day; // Monday start
+  const [y, m, day] = d.split('-').map(Number);
+  const date = new Date(y, m - 1, day);
+  const dow = date.getDay();
+  const diff = dow === 0 ? -6 : 1 - dow; // Monday start
   date.setDate(date.getDate() + diff);
-  return date.toISOString().slice(0, 10);
+  return date.getFullYear() + '-' +
+    String(date.getMonth() + 1).padStart(2, '0') + '-' +
+    String(date.getDate()).padStart(2, '0');
 }
 
 /**
@@ -55,9 +61,12 @@ export function getWeekStart(d: string): string {
  */
 export function getWeekEnd(d: string): string {
   const start = getWeekStart(d);
-  const date = new Date(start);
+  const [y, m, day] = start.split('-').map(Number);
+  const date = new Date(y, m - 1, day);
   date.setDate(date.getDate() + 6);
-  return date.toISOString().slice(0, 10);
+  return date.getFullYear() + '-' +
+    String(date.getMonth() + 1).padStart(2, '0') + '-' +
+    String(date.getDate()).padStart(2, '0');
 }
 
 /**
@@ -67,9 +76,14 @@ export function getWeekEnd(d: string): string {
  */
 export function getWeekDays(startDate: string): string[] {
   const days: string[] = [];
-  const cursor = new Date(startDate);
+  const [y, m, day] = startDate.split('-').map(Number);
+  const cursor = new Date(y, m - 1, day);
   for (let i = 0; i < 7; i++) {
-    days.push(cursor.toISOString().slice(0, 10));
+    days.push(
+      cursor.getFullYear() + '-' +
+      String(cursor.getMonth() + 1).padStart(2, '0') + '-' +
+      String(cursor.getDate()).padStart(2, '0')
+    );
     cursor.setDate(cursor.getDate() + 1);
   }
   return days;
@@ -82,9 +96,12 @@ export function getWeekDays(startDate: string): string[] {
  * @returns {string} Resulting date string
  */
 export function addDays(d: string, n: number): string {
-  const date = new Date(d);
+  const [y, m, day] = d.split('-').map(Number);
+  const date = new Date(y, m - 1, day);
   date.setDate(date.getDate() + n);
-  return date.toISOString().slice(0, 10);
+  return date.getFullYear() + '-' +
+    String(date.getMonth() + 1).padStart(2, '0') + '-' +
+    String(date.getDate()).padStart(2, '0');
 }
 
 /**
@@ -102,8 +119,9 @@ export function isToday(d: string): boolean {
  * @returns {string} Russian weekday abbreviation
  */
 export function dayName(d: string): string {
+  const [y, m, day] = d.split('-').map(Number);
   const days = ['вс','пн','вт','ср','чт','пт','сб'];
-  return days[new Date(d).getDay()];
+  return days[new Date(y, m - 1, day).getDay()];
 }
 
 /**

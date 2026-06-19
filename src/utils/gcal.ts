@@ -191,8 +191,9 @@ export async function connectGoogleCalendar(clientId: string): Promise<TokenData
     if (userResp.ok) {
       token.email = (await userResp.json()).email;
     }
-  } catch {
-    // Non-critical
+  } catch (e) {
+    // Non-critical — just skip email fetch
+    console.warn('Failed to fetch user email for GCal badge:', e);
   }
 
   saveToken(token);
@@ -382,40 +383,6 @@ export async function findEventForSlot(
 }
 
 /**
- * Retrieves busy time slots from primary calendar within a time range.
- * @param clientId - Google OAuth client ID
- * @param timeMin - Start of time range (ISO string)
- * @param timeMax - End of time range (ISO string)
- * @returns Array of busy time slots with start and end times
- */
-export async function getFreeBusy(
-  clientId: string,
-  timeMin: string,
-  timeMax: string,
-): Promise<Array<{ start: string; end: string }>> {
-  const accessToken = await getAccessToken(clientId);
-
-  const url = CALENDAR_API + '/freeBusy';
-  const resp = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: 'Bearer ' + accessToken,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      timeMin,
-      timeMax,
-      items: [{ id: 'primary' }],
-    }),
-  });
-
-  if (!resp.ok) {
-    const err = await resp.text();
-    throw new Error('Failed to get free/busy: ' + err);
-  }
-  const data = await resp.json();
-  return data.calendars?.primary?.busy || [];
-}
 
 /**
  * Build a calendar event from a slot + confirmed bookings.

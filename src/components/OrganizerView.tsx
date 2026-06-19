@@ -4,7 +4,7 @@
  */
 
 import { ExternalLink, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useMemo } from 'preact/hooks';
 import type { Slot } from '../types';
 import { load, save, expandSlots, addSlot, updateSlot, deleteSlot } from '../store';
 import { today, getWeekStart, addDays, formatDateFull } from '../utils/dates';
@@ -49,14 +49,14 @@ export function OrganizerView() {
 
   // Expand slots for current week to show dots on date strip
   const weekEnd = addDays(weekStart, 6);
-  const weekSlots = expandSlots(data.slots, weekStart, weekEnd);
+  const weekSlots = useMemo(() => expandSlots(data.slots, weekStart, weekEnd), [data.slots, weekStart, weekEnd]);
   const slotsByDate: Record<string, number> = {};
   for (const s of weekSlots) {
     slotsByDate[s.date] = (slotsByDate[s.date] || 0) + 1;
   }
 
   // Slots for selected date
-  const daySlots = expandSlots(data.slots, selectedDate, selectedDate);
+  const daySlots = useMemo(() => expandSlots(data.slots, selectedDate, selectedDate), [data.slots, selectedDate]);
 
   const showToast = (msg: string) => {
     setToast(msg);

@@ -90,7 +90,7 @@ export function SlotEditor({ slot, defaultDuration, knownClients, onSave, onDele
       date,
       start,
       end,
-      capacity,
+      capacity: Math.min(50, Math.max(1, capacity)),
       status: 'open',
       bookings,
       notes: notes || undefined,

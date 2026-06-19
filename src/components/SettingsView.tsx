@@ -110,8 +110,9 @@ export function SettingsView({ data, onChange }: Props) {
         }
         localStorage.setItem('timebox_data', JSON.stringify(data));
         window.location.reload();
-      } catch {
-        alert('Ошибка чтения файла');
+      } catch (e) {
+      console.error('Failed to parse imported file:', e);
+      alert('Ошибка чтения файла');
       }
     };
     reader.readAsText(file);

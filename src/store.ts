@@ -27,7 +27,8 @@ export function load(): OrganizerData {
     const raw = localStorage.getItem(KEY);
     if (!raw) return { ...defaults };
     return { ...defaults, ...JSON.parse(raw) };
-  } catch {
+  } catch (e) {
+    console.warn('Failed to load timebox data, using defaults:', e);
     return { ...defaults };
   }
 }
