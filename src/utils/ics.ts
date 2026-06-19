@@ -53,7 +53,7 @@ export function generateSlotICS(slot: Slot, organizerName: string): string {
   lines.push('END:VEVENT');
   lines.push('END:VCALENDAR');
 
-  return lines.join('\\r\\n');
+  return lines.join('\r\n');
 }
 
 /**
@@ -93,7 +93,7 @@ export function generateSlotsICS(slots: Slot[], organizerName: string): string {
   }
 
   lines.push('END:VCALENDAR');
-  return lines.join('\\r\\n');
+  return lines.join('\r\n');
 }
 
 /**

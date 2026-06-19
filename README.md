@@ -23,7 +23,6 @@
 
 - **Preact** + **TypeScript**
 - **Vite** + vite-plugin-pwa
-- **lz-string** — сжатие данных слота в URL
 - Без сервера, хостинг на GitHub Pages
 
 ## Разработка

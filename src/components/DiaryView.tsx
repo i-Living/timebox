@@ -28,11 +28,11 @@ export function DiaryView({ slots, onChange }: Props) {
   // Separate slots into past (with bookings) and future (with notes), sorted chronologically
   const pastSlots = slots
     .filter(s => s.date < today || (s.date <= today && s.bookings.length > 0))
-    .sort((a, b) => b.date.localeCompare(a.date) || b.start.localeCompare(b.start));
+    .sort((a, b) => b.date.localeCompare(a.date) || a.start.localeCompare(b.start));
 
   const futureSlots = slots
     .filter(s => s.date > today && s.notes)
-    .sort((a, b) => a.date.localeCompare(a.date) || a.start.localeCompare(b.start));
+    .sort((a, b) => a.date.localeCompare(b.date) || a.start.localeCompare(b.start));
 
   const allSlots = [...pastSlots, ...futureSlots];
 
